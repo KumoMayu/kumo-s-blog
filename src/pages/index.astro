@@ -1,16 +1,36 @@
 ---
-import { Code } from "astro-expressive-code/components";
 import { Icon } from "astro-icon/components";
 import MainCard from "@/components/MainCard.astro";
-import FeatureCard from "@/components/mdx/FeatureCard.astro";
 import GitHubStats from "@/components/mdx/GitHubStats.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+
+/**
+ * ⭐ 以后换歌只改这里（最显眼位置）
+ *
+ * Apple Music 分享链接（你给的）：
+ * https://music.apple.com/cn/song/%E9%A1%98%E3%81%84-%E3%81%82%E3%81%AE%E9%A0%83%E3%81%AE%E3%82%AD%E3%83%9F%E3%81%B8/1538283050
+ *
+ * Embed 版本（推荐使用 embed.music.apple.com）
+ * 说明：Apple Music 的 embed URL 有时需要 album/id 参数组合。
+ * 如果下面这个 embed 在你电脑上不显示，我会教你从 Apple Music 页面复制正确的 embed 链接再替换这里。
+ */
+const APPLE_MUSIC_EMBED_URL =
+  "https://embed.music.apple.com/cn/song/%E9%A1%98%E3%81%84-%E3%81%82%E3%81%AE%E9%A0%83%E3%81%AE%E3%82%AD%E3%83%9F%E3%81%B8/1538283050";
+
+const featuredSong = {
+  sectionTitle: "限时歌曲推介",
+  songName: "願い~あの頃のキミへ~",
+  artist: "MIREI",
+  note: "本期推荐 · Apple Music 播放",
+  appleMusicLink:
+    "https://music.apple.com/cn/song/%E9%A1%98%E3%81%84-%E3%81%82%E3%81%AE%E9%A0%83%E3%81%AE%E3%82%AD%E3%83%9F%E3%81%B8/1538283050",
+};
 ---
 
 <BaseLayout title="Home">
   <MainCard
-    title="Welcome to Kumo's Blog!"
-    description="A modern, responsive, feature-rich blog theme for Astro with dark/light mode and customizable options."
+    title="欢迎访问 Kumo 的个人博客！"
+    description="提示：严禁闯入 | 提示：嚴禁闖入 | Warning: No entry allowed | 警告: 立ち入り禁止です | 경고: 출입 금지"
     textOverlay="侬好"
     infoIcon="lucide:info"
   >
@@ -24,136 +44,68 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
             🌟 Kumo's Blog
           </h1>
           <p class="text-xl text-base-content/80 max-w-3xl mb-8">
-            A minimal, responsive, and feature-rich Astro blog theme designed for creators who value beautiful content
-            presentation and exceptional performance.
+            区区三万天 试试又能怎
           </p>
           <div class="flex flex-wrap gap-4 justify-center">
             <a href="/blog" class="btn btn-primary gap-2 btn-shine-effect">
               <Icon name="lucide:book-open" class="w-5 h-5" />
-              <span>Explore Blog</span>
+              <span>探索博客</span>
             </a>
-            <a href="https://github.com/EveSunMaple/Frosti" target="_blank" class="btn btn-outline gap-2">
+            <a href="https://github.com/KumoMayu" target="_blank" class="btn btn-outline gap-2">
               <Icon name="lucide:github" class="w-5 h-5" />
-              <span>Star on GitHub</span>
+              <span>我的 Github 项目</span>
             </a>
           </div>
         </div>
       </section>
 
-      <!-- Features Section -->
+      <!-- Featured Song (Apple Music Embed) -->
       <section class="py-6">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Icon name="lucide:sparkles" class="w-6 h-6 text-primary" />
-          <span>Features</span>
+          <Icon name="lucide:music" class="w-6 h-6 text-primary" />
+          <span>{featuredSong.sectionTitle}</span>
         </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard
-            title="Responsive Design"
-            description="Fully responsive design that looks great on all devices from mobile to desktop."
-            icon="lucide:smartphone"
-            color="oklch(0.7 0.2 30)"
-          />
-
-          <FeatureCard
-            title="Dark/Light Mode"
-            description="Toggle between light and dark themes with a beautiful transition effect."
-            icon="lucide:moon"
-            color="oklch(0.65 0.2 280)"
-          />
-
-          <FeatureCard
-            title="MDX Support"
-            description="Write your content in MDX with full support for React components and JSX."
-            icon="lucide:file-code"
-            color="oklch(0.6 0.2 160)"
-          />
-
-          <FeatureCard
-            title="SEO Optimized"
-            description="Built-in SEO optimization with meta tags, OpenGraph, and JSON-LD."
-            icon="lucide:search"
-            color="oklch(0.6 0.2 200)"
-          />
-
-          <FeatureCard
-            title="Fast Performance"
-            description="Optimized for speed with lazy loading, code splitting, and minimal JavaScript."
-            icon="lucide:zap"
-            color="oklch(0.8 0.2 80)"
-          />
-
-          <FeatureCard
-            title="Customizable"
-            description="Easily customize the theme to match your personal brand and preferences."
-            icon="lucide:palette"
-            color="oklch(0.7 0.2 10)"
-          />
-        </div>
-      </section>
-
-      <!-- Quick Start -->
-      <section class="py-6">
-        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Icon name="lucide:rocket" class="w-6 h-6 text-primary" />
-          <span>Quick Start</span>
-        </h2>
-
-        <div class="card bg-base-200 p-6">
-          <h3 class="text-xl font-bold mb-4">Get started in three simple steps:</h3>
-
-          <ol class="space-y-6 mb-6">
-            <li class="relative flex flex-col gap-4 items-start">
-              <div class="flex gap-4 items-center">
-                <div
-                  class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content flex-shrink-0"
-                >
-                  1
-                </div>
-                <h4 class="font-bold">Clone the repository</h4>
+        <div class="card bg-base-200 p-6 shadow-md">
+          <div class="flex flex-col gap-4">
+            <!-- Text row -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <p class="text-sm text-base-content/60">{featuredSong.note}</p>
+                <h3 class="text-xl font-bold leading-snug">{featuredSong.songName}</h3>
+                <p class="text-base-content/70">{featuredSong.artist}</p>
               </div>
-              <div class="relative w-full">
-                <p class="text-base-content/70 mb-2">Use Git to clone the Frosti repository to your local machine:</p>
-                <Code code="git clone --depth 1 https://github.com/EveSunMaple/Frosti.git Frosti" lang="sh" />
-              </div>
-            </li>
 
-            <li class="relative flex flex-col gap-4 items-start">
-              <div class="flex gap-4 items-center">
-                <div
-                  class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content flex-shrink-0"
-                >
-                  2
-                </div>
-                <h4 class="font-bold">Install dependencies</h4>
-              </div>
-              <div class="relative w-full">
-                <p class="text-base-content/70 mb-2">Navigate to the project directory and install dependencies:</p>
-                <Code code="cd Frosti && npm install" lang="sh" />
-              </div>
-            </li>
+              <a
+                class="btn btn-primary gap-2"
+                href={featuredSong.appleMusicLink}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon name="lucide:external-link" class="w-5 h-5" />
+                <span>在 Apple Music 上打开</span>
+              </a>
+            </div>
 
-            <li class="relative flex flex-col gap-4 items-start">
-              <div class="flex gap-4 items-center">
-                <div
-                  class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content flex-shrink-0"
-                >
-                  3
-                </div>
-                <h4 class="font-bold">Start the development server</h4>
-              </div>
-              <div class="relative w-full">
-                <p class="text-base-content/70 mb-2">Launch the local development server to see your blog:</p>
-                <Code code="npm run search:index && npm run dev" lang="sh" />
-              </div>
-            </li>
-          </ol>
+            <!-- Player -->
+            <div class="bg-base-100/60 rounded-xl p-3">
+              <iframe
+                title="Apple Music Player"
+                allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
+                frameborder="0"
+                height="175"
+                style="width:100%; max-width:100%; overflow:hidden; border-radius:12px;"
+                sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+                src={APPLE_MUSIC_EMBED_URL}
+              ></iframe>
 
-          <div class="alert bg-primary/10 text-primary mb-0">
-            <Icon name="lucide:lightbulb" class="w-6 h-6" />
-            <span
-              >Check out the <a href="/blog" class="underline">blog section</a> for detailed guides and documentation.</span
-            >
+              <div class="alert bg-base-100/60 mt-3">
+                <Icon name="lucide:info" class="w-5 h-5" />
+                <span class="text-sm">
+                  提示：多数浏览器不允许“自动播放有声音的音乐”，需要你先在播放器里点一次播放键。
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -162,10 +114,10 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       <section class="py-6">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
           <Icon name="lucide:github" class="w-6 h-6 text-primary" />
-          <span>Repository Stats</span>
+          <span>项目数据看板</span>
         </h2>
 
-        <GitHubStats username="EveSunMaple" repositoryName="Frosti" showLanguages={true} showContributors={true} />
+        <GitHubStats username="KumoMayu" repositoryName="kumo-s-blog" showLanguages={true} showContributors={true} />
       </section>
     </div>
   </MainCard>

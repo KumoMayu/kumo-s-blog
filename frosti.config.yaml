@@ -14,49 +14,49 @@ site:
     pageSize: 8 # 每页显示的文章数量
   menu: # 菜单配置
     - id: home # 菜单项的唯一标识符
-      text: 主页 # 菜单项显示的文本
+      text: 主页 Home # 菜单项显示的文本
       href: / # 菜单项链接的地址
       svg: "material-symbols:home-outline-rounded"
       target: _self
     - id: about
-      text: 关于
+      text: 关于 About
       href: /about
       svg: "material-symbols:info-outline-rounded"
       target: _self
     - id: blog
-      text: 博客
+      text: 博客 Blog
       href: /blog
       svg: "material-symbols:book-2-outline-rounded"
       target: _self
       subItems:
         - id: all
-          text: 全部文章
+          text: 全部文章 All
           href: /blog
           svg: "material-symbols:ink-pen-outline-rounded"
           target: _self
         - id: documentation
-          text: 文档
+          text: 文档 Documentation
           href: /blog/category/Documentation
           svg: "material-symbols:unknown-document-outline-rounded"
           target: _self
         - id: examples
-          text: 示例
+          text: 示例 Examples
           href: /blog/category/Examples
           svg: "material-symbols:deployed-code-outline"
           target: _self
     - id: project
-      text: 项目
+      text: 项目 Project
       href: /project
       svg: "material-symbols:code-blocks-outline"
       target: _self
     - id: friend
-      text: 友链
+      text: 友链 Friend
       href: /friend
       svg: "material-symbols:supervisor-account-outline-rounded"
       target: _self
     - id: contact
-      text: 联系
-      href: "mailto:contact.evesunmaple@outlook.com"
+      text: 联系 Contact
+      href: "mailto:kumomayu@outlook.com"
       target: _blank
       svg: "material-symbols:attach-email-outline-rounded"
 
