@@ -3,17 +3,14 @@ import { Icon } from "astro-icon/components";
 import MainCard from "@/components/MainCard.astro";
 import GitHubStats from "@/components/mdx/GitHubStats.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import CurrentIPLine from "@/components/CurrentIPLine.astro";
 
 /**
- * ⭐ 以后换歌只改这里（最显眼位置）
- *
- * Apple Music 分享链接（你给的）：
- * https://music.apple.com/cn/song/%E9%A1%98%E3%81%84-%E3%81%82%E3%81%AE%E9%A0%83%E3%81%AE%E3%82%AD%E3%83%9F%E3%81%B8/1538283050
- *
- * Embed 版本（推荐使用 embed.music.apple.com）
- * 说明：Apple Music 的 embed URL 有时需要 album/id 参数组合。
- * 如果下面这个 embed 在你电脑上不显示，我会教你从 Apple Music 页面复制正确的 embed 链接再替换这里。
+ * ⭐ Featured Song Config（只改这里）
+ * 更新时间（UTC+8）建议手动写：更像“公告栏”
  */
+const FEATURED_SONG_UPDATED_AT_UTC8 = "Jan 25, 2026"; // ←手动改
+
 const APPLE_MUSIC_EMBED_URL =
   "https://embed.music.apple.com/cn/song/%E9%A1%98%E3%81%84-%E3%81%82%E3%81%AE%E9%A0%83%E3%81%AE%E3%82%AD%E3%83%9F%E3%81%B8/1538283050";
 
@@ -26,6 +23,7 @@ const featuredSong = {
     "https://music.apple.com/cn/song/%E9%A1%98%E3%81%84-%E3%81%82%E3%81%AE%E9%A0%83%E3%81%AE%E3%82%AD%E3%83%9F%E3%81%B8/1538283050",
 };
 ---
+
 
 <BaseLayout title="Home">
   <MainCard
@@ -43,9 +41,7 @@ const featuredSong = {
           >
             🌟 Kumo's Blog
           </h1>
-          <p class="text-xl text-base-content/80 max-w-3xl mb-8">
-            当前IP / Current IP :  杭州 Hangzhou, 浙江 Zhejiang
-          </p>
+          <div class="max-w-3xl w-full mb-8"><CurrentIPLine /></div>
           <div class="flex flex-wrap gap-4 justify-center">
             <a href="/" class="btn btn-primary gap-2 btn-shine-effect"> 
               <!-- 链接记得🙅补上！！！！！ -->
@@ -61,12 +57,35 @@ const featuredSong = {
       </section>
 
       <!-- Featured Song (Apple Music Embed) -->
-      <section class="py-6">
-        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+       
+      <h2 class="text-2xl font-bold mb-6 flex items-center justify-between gap-2">
+        <span class="flex items-center gap-2">
           <Icon name="lucide:music" class="w-6 h-6 text-primary" />
           <span>{featuredSong.sectionTitle}</span>
-        </h2>
+        </span>
 
+        <span class="text-sm text-base-content/60">
+          更新时间 / Updated: 
+          <span class="font-medium">{FEATURED_SONG_UPDATED_AT_UTC8}</span>
+        </span>
+      </h2>
+
+
+      <script is:inline>
+        const el = document.getElementById("song-updated");
+        if (el) {
+          const s = new Intl.DateTimeFormat("zh-CN", {
+            timeZone: "Asia/Shanghai",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }).format(new Date());
+          el.textContent = s;
+        }
+      </script>
         <div class="card bg-base-200 p-6 shadow-md">
           <div class="flex flex-col gap-4">
             <!-- Text row -->
