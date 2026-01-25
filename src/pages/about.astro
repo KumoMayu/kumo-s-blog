@@ -28,11 +28,29 @@ const PROFILE = {
  */
 const FOOTPRINTS_CITIES = [
   // 常驻地：红色（你指定）
-  { name: "杭州 Hangzhou", lat: 30.2741, lon: 120.1551, visits: 8, tags: ["home"] },
-  { name: "西安 Xi'an", lat: 34.3416, lon: 108.9398, visits: 8, tags: ["home"] },
+  {
+    name: "杭州 Hangzhou",
+    lat: 30.2741,
+    lon: 120.1551,
+    visits: 8,
+    tags: ["home"],
+  },
+  {
+    name: "西安 Xi'an",
+    lat: 34.3416,
+    lon: 108.9398,
+    visits: 8,
+    tags: ["home"],
+  },
 
   // 示例：今年到访（你指定先用宁波做效果）
-  { name: "宁波 Ningbo", lat: 29.8683, lon: 121.544, visits: 3, tags: ["thisYear"] },
+  {
+    name: "宁波 Ningbo",
+    lat: 29.8683,
+    lon: 121.544,
+    visits: 3,
+    tags: ["thisYear"],
+  },
 
   // 示例：一些城市（你随时删/改/加）
   { name: "上海 Shanghai", lat: 31.2304, lon: 121.4737, visits: 2, tags: [] },
@@ -41,7 +59,9 @@ const FOOTPRINTS_CITIES = [
 ];
 
 /** 颜色分级：按 visits 映射到你要的红/橙/紫/蓝/绿 */
-function levelOf(visits: number): "red" | "orange" | "purple" | "blue" | "green" {
+function levelOf(
+  visits: number,
+): "red" | "orange" | "purple" | "blue" | "green" {
   if (visits >= 6) return "red";
   if (visits >= 3) return "orange";
   if (visits >= 2) return "purple";
