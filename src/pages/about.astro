@@ -49,12 +49,12 @@ function levelOf(visits: number): "red" | "orange" | "purple" | "blue" | "green"
   return "green";
 }
 
-/** 把经纬度映射到 SVG 坐标（保证位置准确） */
+/** 把经纬度映射到 SVG 坐标（保证位置准确） 
 function project(lon: number, lat: number) {
   const x = ((lon - MAP_VIEW.lonMin) / (MAP_VIEW.lonMax - MAP_VIEW.lonMin)) * MAP_VIEW.width;
   const y = ((MAP_VIEW.latMax - lat) / (MAP_VIEW.latMax - MAP_VIEW.latMin)) * MAP_VIEW.height;
   return { x, y };
-}
+}*/
 ---
 
 <BaseLayout title="About">
