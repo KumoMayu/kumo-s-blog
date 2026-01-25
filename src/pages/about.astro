@@ -25,6 +25,9 @@ const PROFILE = {
  * ⭐ 足迹城市配置（你以后主要改这里）
  * visits: 到访次数（用于颜色分级）
  * tags: 可选：home / thisYear
+ *
+ * 可选加字段：
+ * note: "2026-01-01 解锁该城市"
  */
 const FOOTPRINTS_CITIES = [
   // 常驻地：红色（你指定）
@@ -34,6 +37,7 @@ const FOOTPRINTS_CITIES = [
     lon: 120.1551,
     visits: 8,
     tags: ["home"],
+    note: "2026-01-01 解锁该城市",
   },
   {
     name: "西安 Xi'an",
@@ -41,6 +45,7 @@ const FOOTPRINTS_CITIES = [
     lon: 108.9398,
     visits: 8,
     tags: ["home"],
+    note: "2026-01-01 解锁该城市",
   },
 
   // 示例：今年到访（你指定先用宁波做效果）
@@ -50,12 +55,13 @@ const FOOTPRINTS_CITIES = [
     lon: 121.544,
     visits: 3,
     tags: ["thisYear"],
+    note: "2026-01-01 解锁该城市",
   },
 
   // 示例：一些城市（你随时删/改/加）
-  { name: "上海 Shanghai", lat: 31.2304, lon: 121.4737, visits: 2, tags: [] },
-  { name: "北京 Beijing", lat: 39.9042, lon: 116.4074, visits: 1, tags: [] },
-  { name: "南京 Nanjing", lat: 32.0603, lon: 118.7969, visits: 1, tags: [] },
+  { name: "上海 Shanghai", lat: 31.2304, lon: 121.4737, visits: 2, tags: [], note: "2026-01-01 解锁该城市" },
+  { name: "北京 Beijing", lat: 39.9042, lon: 116.4074, visits: 1, tags: [], note: "2026-01-01 解锁该城市" },
+  { name: "南京 Nanjing", lat: 32.0603, lon: 118.7969, visits: 1, tags: [], note: "2026-01-01 解锁该城市" },
 ];
 
 /** 颜色分级：按 visits 映射到你要的红/橙/紫/蓝/绿 */
@@ -81,9 +87,7 @@ function levelOf(
       <!-- Profile Section -->
       <section class="flex flex-col md:flex-row gap-8 items-center md:items-start">
         <div class="avatar">
-          <div
-            class="w-32 h-32 md:w-40 md:h-40 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden"
-          >
+          <div class="w-32 h-32 md:w-40 md:h-40 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
             <img src={PROFILE.avatar} alt={PROFILE.name} width="160" height="160" loading="eager" />
           </div>
         </div>
@@ -98,12 +102,7 @@ function levelOf(
               <span>GitHub</span>
             </a>
 
-            <a
-              href={PROFILE.links.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-sm btn-outline gap-2"
-            >
+            <a href={PROFILE.links.instagram} target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline gap-2">
               <Icon name="lucide:instagram" class="w-4 h-4" />
               <span>Instagram</span>
             </a>
@@ -155,6 +154,7 @@ function levelOf(
                 <svg
                   id="footprintMap"
                   viewBox="0 0 1000 680"
+                  preserveAspectRatio="xMidYMid meet"
                   class="w-full h-[420px] md:h-[520px]"
                   role="img"
                   aria-label="Footprints world map"
@@ -177,7 +177,7 @@ function levelOf(
 
                   <!-- pan/zoom -->
                   <g id="viewport">
-                    <!-- land silhouette (local svg, fast, no wall issues) -->
+                    <!-- land silhouette -->
                     <image
                       href="/maps/world-land.svg"
                       x="0"
@@ -193,7 +193,6 @@ function levelOf(
                     {
                       FOOTPRINTS_CITIES.map((c) => {
                         const lv = levelOf(c.visits);
-
                         const dot =
                           lv === "red" ? "fill-red-500" :
                           lv === "orange" ? "fill-orange-500" :
@@ -203,34 +202,23 @@ function levelOf(
                         const tags = c.tags || [];
                         const isHome = tags.includes("home");
                         const isThisYear = tags.includes("thisYear");
-
-                        const r = 1;
                         const showLabelByDefault = isHome || isThisYear;
-                        const shortName = c.name.split(" ")[0];
 
-                        // NOTE: we don't compute x/y here (client will do precise projection)
                         return (
                           <g
-                            class="city-point"
+                            class="city-point cursor-pointer"
                             data-lon={String(c.lon)}
                             data-lat={String(c.lat)}
                             data-tags={tags.join(",")}
                             data-name={c.name}
+                            data-note={c.note ?? "2026-01-01 解锁该城市"}
                             data-label-default={showLabelByDefault ? "1" : "0"}
                           >
-                            <circle r={1.5} fill="rgba(255,255,255,0.60)" />
-                            <circle r={r} class={dot} />
-                            <text
-                              class="city-label"
-                              x="12"
-                              y="5"
-                              font-size="14"
-                              fill="rgba(15,23,42,0.78)"
-                              style="paint-order: stroke; stroke: rgba(255,255,255,0.95); stroke-width: 3px;"
-                            >
-                              {shortName}
-                            </text>
-                            <title>{`${c.name} · visits: ${c.visits}`}</title>
+                            <!-- halo + dot (你要求统一) -->
+                            <circle r="1.5" fill="rgba(255,255,255,0.60)" />
+                            <circle r="1" class={dot} />
+                            <!-- label：默认隐藏（你要求地图上不显示文字） -->
+                            <text class="city-label" style="display:none"></text>
                           </g>
                         );
                       })
@@ -241,41 +229,41 @@ function levelOf(
 
               <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <p class="text-xs text-base-content/60 leading-relaxed">
-                  <span class="block">
-                    滚轮缩放、拖拽移动，单击城市点可查看更多内容。
-                  </span>
-                  <span class="hidden md:block">
-                    Supports zooming and panning; click a city point to view more details.
-                  </span>
+                  <span class="block">滚轮缩放、拖拽移动，单击城市点可查看更多内容。</span>
+                  <span class="hidden md:block">Supports zooming and panning; click a city point to view more details.</span>
                 </p>
                 <button id="btnReset" class="btn btn-xs btn-outline w-fit" type="button">
                   重置视图
                 </button>
               </div>
 
-            <div class="alert bg-base-100/60">
-              <Icon name="lucide:info" class="w-5 h-5" />
-              <span class="text-sm">
-                <span>非完全数据，</span><span class="thick-s">持续</span><span>随缘更新中，<b>保障个人隐私</b> / Incomplete data in progress &amp; <b>Protect privacy</b></span>
-                <style>
-                  .thick-s{
-                    position:relative;
-                    display:inline-block;
-                    white-space:nowrap; /* 保证本段不换行 */
-                  }
-                  .thick-s::after{
-                    content:"";
-                    position:absolute;
-                    left:0;
-                    right:0;
-                    top:52%;            /* 线在字的中部，想高/低可调 */
-                    height:2.5px;       /* 这里就是“删除线加粗”的粗细 */
-                    background:currentColor;
-                    transform:translateY(-50%);
-                    pointer-events:none;
-                  }
-                </style>
-              </span>
+              <div class="alert bg-base-100/60">
+                <Icon name="lucide:info" class="w-5 h-5" />
+                <span class="text-sm">
+                  <span>非完全数据，</span>
+                  <span class="thick-s">持续</span>
+                  <span>随缘更新中，<b>保障个人隐私</b> / Incomplete data in progress &amp; <b>Protect privacy</b></span>
+
+                  <style>
+                    .thick-s {
+                      position: relative;
+                      display: inline-block;
+                      white-space: nowrap;
+                    }
+                    .thick-s::after {
+                      content: "";
+                      position: absolute;
+                      left: 0;
+                      right: 0;
+                      top: 52%;
+                      height: 2.5px;
+                      background: currentColor;
+                      transform: translateY(-50%);
+                      pointer-events: none;
+                    }
+                  </style>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -290,21 +278,19 @@ function levelOf(
           const VIEW_W = 1000;
           const VIEW_H = 680;
 
-          // ====== 默认聚焦：你想更“全中国”就改这里 ======
-          // 中国更居中：{ lon: 105, lat: 35 }；华东更居中：{ lon: 120, lat: 30 }
           const DEFAULT_CENTER = { lon: 115, lat: 30 };
           const DEFAULT_SCALE = 7;
 
           const MIN_SCALE = 1.0;
-          const MAX_SCALE = 40.0; // 狠狠放大
+          const MAX_SCALE = 40.0;
 
-          // ====== 你要“凑参数”的地方（只影响点的位置，不改底图）======
-          // 偏南 -> latBiasDeg 设为正值（例如 +0.6）
-          // 偏东/西 -> lonBiasDeg 微调（例如 -0.3 / +0.3）
-          // scale 用来修正“整体比例”轻微偏差（一般别动，最多 1.01/0.99）
+          // ====== 你只需要调这里来“凑参数” ======
+          // 偏东 -> lonBiasDeg 增大；偏西 -> 减小
+          // 偏南 -> latBiasDeg 增大；偏北 -> 减小
+          // lonScale/latScale: 只用来修正整体比例（很小幅度，如 0.995~1.005）
           const TUNE = {
-            lonBiasDeg: -0.5,
-            latBiasDeg: 13.65,
+            lonBiasDeg: -35.5,
+            latBiasDeg: 13.7,
             lonScale: 1.0,
             latScale: 1.0,
           };
@@ -313,48 +299,82 @@ function levelOf(
             return Math.max(min, Math.min(max, v));
           }
 
-          // ====== 关键：底图自身比例（你说 800×387）======
-          // 你的 <image> 大概率用了 preserveAspectRatio="xMidYMid slice/meet"
-          // 如果没设，SVG 会被拉伸；建议你在 <image> 上加：
-          // preserveAspectRatio="xMidYMid slice"
-          //
-          // 下面这段会把“投影结果”再做一次与底图一致的等比缩放/居中裁切（slice）
-          const IMG_W = 800;
-          const IMG_H = 387;
-
-          function applyAspectSlice(x, y) {
-            const sx = VIEW_W / IMG_W;
-            const sy = VIEW_H / IMG_H;
-            const s = Math.max(sx, sy); // slice：cover，不变形，可能裁边
-            const dx = (VIEW_W - IMG_W * s) / 2;
-            const dy = (VIEW_H - IMG_H * s) / 2;
-            return { x: x * s + dx, y: y * s + dy };
-          }
-
-          // ====== Web Mercator 投影（矩形世界地图最常见）======
-          // x: 线性经度
-          // y: 墨卡托纬度（格陵兰会变大）
+          // ====== Mercator（如果你的 world-land.svg 是墨卡托矩形世界图） ======
           function mercatorY01(latDeg) {
             const lat = clamp(latDeg, -85, 85) * Math.PI / 180;
             const y = Math.log(Math.tan(Math.PI / 4 + lat / 2));
             const yMin = Math.log(Math.tan(Math.PI / 4 + (-85 * Math.PI / 180) / 2));
-            const yMax = Math.log(Math.tan(Math.PI / 4 + (85 * Math.PI / 180) / 2));
+            const yMax = Math.log(Math.tan(Math.PI / 4 + ( 85 * Math.PI / 180) / 2));
             return (yMax - y) / (yMax - yMin); // 0 top, 1 bottom
           }
 
+          // ====== 关键：获取底图在 viewBox 中“实际显示”的矩形 ======
+          // 这一步让点映射永远和 <image preserveAspectRatio="..."> 保持一致
+          function getImageBoxInViewBox() {
+            const img = viewport.querySelector('image[href="/maps/world-land.svg"], image[xlink\\:href="/maps/world-land.svg"]')
+              || viewport.querySelector("image");
+            if (!img) {
+              // fallback：就当全铺满
+              return { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
+            }
+
+            // 你写的是 width=1000 height=680；但 slice/meet 可能导致实际“有效绘制区域”裁切
+            // 最稳：用 getBBox 获取在当前用户坐标系里的实际 bbox（不依赖你猜原始尺寸）
+            try {
+              const bb = img.getBBox();
+              // bb 是 image 元素自身在 viewBox 坐标的矩形（通常就是 0..1000, 0..680）
+              // 但 slice 的“裁切”发生在 image 内部，不会反映到 bbox。
+              // 所以我们还需要用 preserveAspectRatio 的规则，算出“图像内容”在该 bbox 内的可见区域。
+              const x = bb.x, y = bb.y, w = bb.width, h = bb.height;
+
+              // 读取你写在 <image> 上的 preserveAspectRatio（默认 xMidYMid meet）
+              const par = (img.getAttribute("preserveAspectRatio") || "xMidYMid meet").trim();
+              const isSlice = /\bslice\b/i.test(par); // 你现在是 slice
+
+              // 读取“原始资源宽高”：无法从 SVG image 标签直接拿到文件内部 viewBox，
+              // 所以这里给一个可调的“资源比例”参数（只影响裁切计算，不影响投影本身）
+              // 你说资源 800×387，就写这里；如果以后换图只改这里即可
+              const SRC_W = 800;
+              const SRC_H = 387;
+
+              const sx = w / SRC_W;
+              const sy = h / SRC_H;
+              const s = isSlice ? Math.max(sx, sy) : Math.min(sx, sy); // slice=cover, meet=contain
+
+              const drawW = SRC_W * s;
+              const drawH = SRC_H * s;
+
+              // xMidYMid：居中
+              const dx = (w - drawW) / 2;
+              const dy = (h - drawH) / 2;
+
+              // 图像内容实际绘制区域（可能超出 bb，超出的部分会被裁掉）
+              // 我们要用“bb 内的那一块”作为点位映射目标，所以返回 bb 本身，
+              // 同时在 project 里用 dx/dy/s 把点从“资源坐标”映射到 bb。
+              return { x, y, w, h, s, dx, dy, srcW: SRC_W, srcH: SRC_H };
+            } catch {
+              return { x: 0, y: 0, w: VIEW_W, h: VIEW_H, s: 1, dx: 0, dy: 0, srcW: 800, srcH: 387 };
+            }
+          }
+
+          // ====== 经纬度 -> 点坐标（严格和底图裁切/比例一致）======
           function project(lon, lat) {
+            const imgBox = getImageBoxInViewBox();
+
             const lonAdj = (lon + TUNE.lonBiasDeg) * TUNE.lonScale;
             const latAdj = (lat + TUNE.latBiasDeg) * TUNE.latScale;
 
-            // 先算到“底图坐标系”（800×387）里
-            const x0 = ((lonAdj + 180) / 360) * IMG_W;
-            const y0 = mercatorY01(latAdj) * IMG_H;
+            // 先到“资源坐标系”（0..SRC_W / 0..SRC_H）
+            const x0 = ((lonAdj + 180) / 360) * imgBox.srcW;
+            const y0 = mercatorY01(latAdj) * imgBox.srcH;
 
-            // 再按底图同样的等比缩放/居中裁切映射到 1000×680
-            return applyAspectSlice(x0, y0);
+            // 再按 preserveAspectRatio 的缩放与偏移映射到 viewBox
+            const x = imgBox.x + (x0 * imgBox.s + imgBox.dx);
+            const y = imgBox.y + (y0 * imgBox.s + imgBox.dy);
+
+            return { x, y };
           }
 
-          // ====== 把点移动到正确位置（不显示文字）======
           function layoutPoints() {
             const points = svg.querySelectorAll(".city-point");
             points.forEach((p) => {
@@ -364,29 +384,6 @@ function levelOf(
 
               const { x, y } = project(lon, lat);
               p.setAttribute("transform", `translate(${x.toFixed(2)}, ${y.toFixed(2)})`);
-
-              // 确保地图上不显示文字
-              const text = p.querySelector("text");
-              if (text) text.style.display = "none";
-
-              // 如果没 note，给默认
-              if (!p.getAttribute("data-note")) {
-                p.setAttribute("data-note", "2026-01-01 解锁该城市");
-              }
-            });
-          }
-
-          // ====== 强制统一点大小：彩点=1，晕=1.5 ======
-          function normalizeDots() {
-            const points = svg.querySelectorAll(".city-point");
-            points.forEach((p) => {
-              const circles = p.querySelectorAll("circle");
-              if (circles.length >= 2) {
-                circles[0].setAttribute("r", "1.5");
-                circles[1].setAttribute("r", "1");
-              } else if (circles.length === 1) {
-                circles[0].setAttribute("r", "1");
-              }
             });
           }
 
@@ -421,7 +418,6 @@ function levelOf(
 
           function setMode(nextMode) {
             mode = nextMode;
-
             if (btnAll && btnThisYear) {
               if (mode === "all") {
                 btnAll.classList.add("btn-primary");
@@ -446,52 +442,56 @@ function levelOf(
             applyTransform();
           }
 
-          // ====== 缩放：以鼠标为中心 ======
+          // ====== 屏幕坐标 -> viewBox 坐标（dev/prod 一致）======
+          function toSvgPoint(clientX, clientY) {
+            const pt = svg.createSVGPoint();
+            pt.x = clientX;
+            pt.y = clientY;
+            const ctm = svg.getScreenCTM();
+            if (!ctm) return { x: VIEW_W / 2, y: VIEW_H / 2 };
+            const p = pt.matrixTransform(ctm.inverse());
+            return { x: p.x, y: p.y };
+          }
+
+          // ====== 缩放：鼠标为中心 ======
           svg?.addEventListener("wheel", (e) => {
             e.preventDefault();
             const delta = Math.sign(e.deltaY);
             const factor = delta > 0 ? 0.90 : 1.12;
             const next = clamp(scale * factor, MIN_SCALE, MAX_SCALE);
 
-            const rect = svg.getBoundingClientRect();
-            const cx = ((e.clientX - rect.left) / rect.width) * VIEW_W;
-            const cy = ((e.clientY - rect.top) / rect.height) * VIEW_H;
-
+            const { x: cx, y: cy } = toSvgPoint(e.clientX, e.clientY);
             tx = cx - (cx - tx) * (next / scale);
             ty = cy - (cy - ty) * (next / scale);
             scale = next;
             applyTransform();
-            hideTip();
+            hideTip?.();
           }, { passive: false });
 
           // ====== 拖拽平移 ======
           let dragging = false;
-          let lastX = 0, lastY = 0;
+          let lastP = null;
 
           svg?.addEventListener("mousedown", (e) => {
             dragging = true;
-            lastX = e.clientX;
-            lastY = e.clientY;
-            hideTip();
+            lastP = toSvgPoint(e.clientX, e.clientY);
+            hideTip?.();
           });
-          window.addEventListener("mouseup", () => dragging = false);
+          window.addEventListener("mouseup", () => { dragging = false; lastP = null; });
           window.addEventListener("mousemove", (e) => {
-            if (!dragging) return;
-            const dx = (e.clientX - lastX);
-            const dy = (e.clientY - lastY);
-            tx += dx / scale;
-            ty += dy / scale;
-            lastX = e.clientX;
-            lastY = e.clientY;
+            if (!dragging || !lastP) return;
+            const p = toSvgPoint(e.clientX, e.clientY);
+            tx += (p.x - lastP.x);
+            ty += (p.y - lastP.y);
+            lastP = p;
             applyTransform();
           });
 
-          // ====== 点击显示卡片（城市名 + 一行介绍）======
+          // ====== 点击提示（保留你原来的 tip 逻辑即可）======
           let tipEl = null;
 
           function ensureTip() {
             if (tipEl) return tipEl;
-
             tipEl = document.createElement("div");
             tipEl.id = "cityTip";
             tipEl.style.position = "fixed";
@@ -500,7 +500,6 @@ function levelOf(
             tipEl.style.pointerEvents = "auto";
             tipEl.style.display = "none";
             tipEl.className = "card bg-base-100 shadow-lg border border-base-200 rounded-xl";
-
             tipEl.innerHTML = `
               <div class="card-body p-4">
                 <div class="flex items-start justify-between gap-3">
@@ -512,17 +511,14 @@ function levelOf(
                 </div>
               </div>
             `;
-
             document.body.appendChild(tipEl);
             tipEl.querySelector("#tipClose").addEventListener("click", hideTip);
-
             window.addEventListener("click", (ev) => {
               if (!tipEl || tipEl.style.display === "none") return;
               if (tipEl.contains(ev.target)) return;
               const isPoint = ev.target && ev.target.closest && ev.target.closest(".city-point");
               if (!isPoint) hideTip();
             });
-
             return tipEl;
           }
 
@@ -535,7 +531,6 @@ function levelOf(
             const tip = ensureTip();
             const name = pointEl.getAttribute("data-name") || "Unknown";
             const note = pointEl.getAttribute("data-note") || "（未填写解锁信息）";
-
             tip.querySelector("#tipTitle").textContent = name;
             tip.querySelector("#tipNote").textContent = note;
 
@@ -573,15 +568,22 @@ function levelOf(
           btnAll?.addEventListener("click", () => setMode("all"));
           btnThisYear?.addEventListener("click", () => setMode("thisYear"));
 
-          // ====== init ======
-          layoutPoints();
-          normalizeDots();
-          setMode("all");
-          setViewToCenterLonLat(DEFAULT_CENTER.lon, DEFAULT_CENTER.lat, DEFAULT_SCALE);
+          // ====== init（等图片加载后再 layout，一次性解决“第一次偏移”）======
+          function init() {
+            layoutPoints();
+            setMode("all");
+            setViewToCenterLonLat(DEFAULT_CENTER.lon, DEFAULT_CENTER.lat, DEFAULT_SCALE);
+          }
+
+          // image 资源未必立刻 ready：等一帧 + 监听 load
+          const imgEl = viewport.querySelector("image");
+          if (imgEl) {
+            imgEl.addEventListener("load", () => init(), { once: true });
+          }
+          requestAnimationFrame(() => init());
         </script>
-
-
       </section>
+
 
       <!-- Contribution Activity -->
       <section class="mt-8">
