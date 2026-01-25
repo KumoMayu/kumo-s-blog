@@ -31,22 +31,25 @@ site:
       subItems:
         - id: all
           text: 全部文章 All
-          href: /blog
+          href: /
+          #href: /blog
           svg: "material-symbols:ink-pen-outline-rounded"
           target: _self
         - id: documentation
           text: 文档 Documentation
-          href: /blog/category/Documentation
+          href: /
+          #href: /blog/category/Documentation
           svg: "material-symbols:unknown-document-outline-rounded"
           target: _self
         - id: examples
           text: 示例 Examples
-          href: /blog/category/Examples
+          href: /
+          #href: /blog/category/Examples
           svg: "material-symbols:deployed-code-outline"
           target: _self
     - id: project
       text: 项目 Project
-      href: /project
+      href: /    #因为劳资没弄好
       svg: "material-symbols:code-blocks-outline"
       target: _self
     - id: friend
