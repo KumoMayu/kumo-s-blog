@@ -68,13 +68,6 @@ function levelOf(
   if (visits >= 1) return "blue";
   return "green";
 }
-
-/** 把经纬度映射到 SVG 坐标（保证位置准确） 
-function project(lon: number, lat: number) {
-  const x = ((lon - MAP_VIEW.lonMin) / (MAP_VIEW.lonMax - MAP_VIEW.lonMin)) * MAP_VIEW.width;
-  const y = ((MAP_VIEW.latMax - lat) / (MAP_VIEW.latMax - MAP_VIEW.latMin)) * MAP_VIEW.height;
-  return { x, y };
-}*/
 ---
 
 <BaseLayout title="About">
@@ -191,6 +184,7 @@ function project(lon: number, lat: number) {
                       y="0"
                       width="1000"
                       height="680"
+                      preserveAspectRatio="xMidYMid slice"
                       opacity="0.30"
                       style="filter: brightness(1.18) contrast(0.95);"
                     />
@@ -315,33 +309,49 @@ function project(lon: number, lat: number) {
             latScale: 1.0,
           };
 
-          function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+          function clamp(v, min, max) {
+            return Math.max(min, Math.min(max, v));
+          }
+
+          // ====== 关键：底图自身比例（你说 800×387）======
+          // 你的 <image> 大概率用了 preserveAspectRatio="xMidYMid slice/meet"
+          // 如果没设，SVG 会被拉伸；建议你在 <image> 上加：
+          // preserveAspectRatio="xMidYMid slice"
+          //
+          // 下面这段会把“投影结果”再做一次与底图一致的等比缩放/居中裁切（slice）
+          const IMG_W = 800;
+          const IMG_H = 387;
+
+          function applyAspectSlice(x, y) {
+            const sx = VIEW_W / IMG_W;
+            const sy = VIEW_H / IMG_H;
+            const s = Math.max(sx, sy); // slice：cover，不变形，可能裁边
+            const dx = (VIEW_W - IMG_W * s) / 2;
+            const dy = (VIEW_H - IMG_H * s) / 2;
+            return { x: x * s + dx, y: y * s + dy };
+          }
 
           // ====== Web Mercator 投影（矩形世界地图最常见）======
           // x: 线性经度
           // y: 墨卡托纬度（格陵兰会变大）
           function mercatorY01(latDeg) {
             const lat = clamp(latDeg, -85, 85) * Math.PI / 180;
-            // 归一化到 [0,1]：0 顶部，1 底部
             const y = Math.log(Math.tan(Math.PI / 4 + lat / 2));
-            // mercator(lat) 的范围大致 [-pi, +pi]（在 ±85°附近接近 ±pi）
-            // 更稳妥：用 mercator(±85) 作为上下界
-            const yMin = Math.log(Math.tan(Math.PI / 4 + (-85 * Math.PI/180) / 2));
-            const yMax = Math.log(Math.tan(Math.PI / 4 + ( 85 * Math.PI/180) / 2));
-            return (yMax - y) / (yMax - yMin);
+            const yMin = Math.log(Math.tan(Math.PI / 4 + (-85 * Math.PI / 180) / 2));
+            const yMax = Math.log(Math.tan(Math.PI / 4 + (85 * Math.PI / 180) / 2));
+            return (yMax - y) / (yMax - yMin); // 0 top, 1 bottom
           }
 
           function project(lon, lat) {
             const lonAdj = (lon + TUNE.lonBiasDeg) * TUNE.lonScale;
             const latAdj = (lat + TUNE.latBiasDeg) * TUNE.latScale;
 
-            const x01 = (lonAdj + 180) / 360;
-            const y01 = mercatorY01(latAdj);
+            // 先算到“底图坐标系”（800×387）里
+            const x0 = ((lonAdj + 180) / 360) * IMG_W;
+            const y0 = mercatorY01(latAdj) * IMG_H;
 
-            return {
-              x: x01 * VIEW_W,
-              y: y01 * VIEW_H,
-            };
+            // 再按底图同样的等比缩放/居中裁切映射到 1000×680
+            return applyAspectSlice(x0, y0);
           }
 
           // ====== 把点移动到正确位置（不显示文字）======
@@ -372,7 +382,6 @@ function project(lon: number, lat: number) {
             points.forEach((p) => {
               const circles = p.querySelectorAll("circle");
               if (circles.length >= 2) {
-                // 默认：第一个 circle 当晕圈，第二个当实心点（与你之前结构一致）
                 circles[0].setAttribute("r", "1.5");
                 circles[1].setAttribute("r", "1");
               } else if (circles.length === 1) {
@@ -388,7 +397,6 @@ function project(lon: number, lat: number) {
           let mode = "all";
 
           function clampToFrame() {
-            // 不露白：viewport 缩放后必须覆盖整个 viewBox
             const minTx = VIEW_W - VIEW_W * scale;
             const maxTx = 0;
             const minTy = VIEW_H - VIEW_H * scale;
@@ -571,7 +579,6 @@ function project(lon: number, lat: number) {
           setMode("all");
           setViewToCenterLonLat(DEFAULT_CENTER.lon, DEFAULT_CENTER.lat, DEFAULT_SCALE);
         </script>
-
 
 
       </section>
