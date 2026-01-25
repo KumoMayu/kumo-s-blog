@@ -1,15 +1,67 @@
 ---
 import { Icon } from "astro-icon/components";
 import MainCard from "@/components/MainCard.astro";
-import GitHubStats from "@/components/mdx/GitHubStats.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+
+/** ⭐ 常用信息集中放这里：以后改链接最方便 */
+const PROFILE = {
+  name: "KumoMayu",
+  tagline: "XJTU 自动化 / Automation",
+  avatar: "https://github.com/KumoMayu.png",
+  links: {
+    github: "https://github.com/KumoMayu",
+    instagram: "https://www.instagram.com/ng_tungho/",
+    email: "mailto:kumomayu@outlook.com",
+  },
+  introLines: [
+    "摸鱼者 / Slacker",
+    "模拟经营游戏玩家 / Simulation game player",
+    "内容创作者 / Content creator",
+    "世界探索者 / World explorer",
+  ],
+};
+
+/**
+ * ⭐ 足迹城市配置（你以后主要改这里）
+ * visits: 到访次数（用于颜色分级）
+ * tags: 可选：home / thisYear
+ */
+const FOOTPRINTS_CITIES = [
+  // 常驻地：红色（你指定）
+  { name: "杭州 Hangzhou", lat: 30.2741, lon: 120.1551, visits: 8, tags: ["home"] },
+  { name: "西安 Xi'an", lat: 34.3416, lon: 108.9398, visits: 8, tags: ["home"] },
+
+  // 示例：今年到访（你指定先用宁波做效果）
+  { name: "宁波 Ningbo", lat: 29.8683, lon: 121.544, visits: 3, tags: ["thisYear"] },
+
+  // 示例：一些城市（你随时删/改/加）
+  { name: "上海 Shanghai", lat: 31.2304, lon: 121.4737, visits: 2, tags: [] },
+  { name: "北京 Beijing", lat: 39.9042, lon: 116.4074, visits: 1, tags: [] },
+  { name: "南京 Nanjing", lat: 32.0603, lon: 118.7969, visits: 1, tags: [] },
+];
+
+/** 颜色分级：按 visits 映射到你要的红/橙/紫/蓝/绿 */
+function levelOf(visits: number): "red" | "orange" | "purple" | "blue" | "green" {
+  if (visits >= 6) return "red";
+  if (visits >= 3) return "orange";
+  if (visits >= 2) return "purple";
+  if (visits >= 1) return "blue";
+  return "green";
+}
+
+/** 把经纬度映射到 SVG 坐标（保证位置准确） */
+function project(lon: number, lat: number) {
+  const x = ((lon - MAP_VIEW.lonMin) / (MAP_VIEW.lonMax - MAP_VIEW.lonMin)) * MAP_VIEW.width;
+  const y = ((MAP_VIEW.latMax - lat) / (MAP_VIEW.latMax - MAP_VIEW.latMin)) * MAP_VIEW.height;
+  return { x, y };
+}
 ---
 
 <BaseLayout title="About">
   <MainCard
-    title="About SunMaple"
-    description="Developer, open-source enthusiast, and creator of the Frosti blog theme."
-    textOverlay="ABOUT"
+    title={`About ${PROFILE.name}`}
+    description={PROFILE.tagline}
+    textOverlay="浮生一记"
     infoIcon="lucide:user"
   >
     <div class="space-y-10 mb-8">
@@ -19,123 +71,504 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
           <div
             class="w-32 h-32 md:w-40 md:h-40 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden"
           >
-            <img src="https://github.com/EveSunMaple.png" alt="SunMaple" width="160" height="160" loading="eager" />
+            <img src={PROFILE.avatar} alt={PROFILE.name} width="160" height="160" loading="eager" />
           </div>
         </div>
 
         <div class="flex-1 text-center md:text-left">
-          <h1 class="text-3xl md:text-4xl font-bold mb-2">SunMaple</h1>
-          <p class="text-xl text-base-content/80 mb-4">Developer & Open-Source Enthusiast</p>
+          <h1 class="text-3xl md:text-4xl font-bold mb-2">{PROFILE.name}</h1>
+          <p class="text-xl text-base-content/80 mb-4">{PROFILE.tagline}</p>
 
           <div class="flex flex-wrap gap-3 justify-center md:justify-start mb-6">
-            <a
-              href="https://github.com/EveSunMaple"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-sm btn-outline gap-2"
-            >
+            <a href={PROFILE.links.github} target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline gap-2">
               <Icon name="lucide:github" class="w-4 h-4" />
               <span>GitHub</span>
             </a>
+
             <a
-              href="https://twitter.com/EveSunMaple"
+              href={PROFILE.links.instagram}
               target="_blank"
               rel="noopener noreferrer"
               class="btn btn-sm btn-outline gap-2"
             >
-              <Icon name="lucide:twitter" class="w-4 h-4" />
-              <span>Twitter</span>
+              <Icon name="lucide:instagram" class="w-4 h-4" />
+              <span>Instagram</span>
             </a>
-            <a href="mailto:kumomayu@outlook.com" class="btn btn-sm btn-outline gap-2">
+
+            <a href={PROFILE.links.email} class="btn btn-sm btn-outline gap-2">
               <Icon name="lucide:mail" class="w-4 h-4" />
               <span>Email</span>
             </a>
           </div>
 
-          <p class="text-base-content/80">
-            Hello! I'm SunMaple, a passionate developer focused on creating elegant, responsive, and efficient web
-            applications. I'm the creator of the Frosti blog theme, a modern Astro-based theme for content creators. I
-            love contributing to open-source projects and building tools that help others create beautiful digital
-            experiences.
-          </p>
+          <div class="text-base-content/80 space-y-2">
+            {PROFILE.introLines.map((line) => <p>{line}</p>)}
+          </div>
         </div>
       </section>
 
-      <!-- GitHub Stats -->
+      <!-- Footprints -->
       <section>
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Icon name="lucide:github" class="w-6 h-6 text-primary" />
-          <span>GitHub Statistics</span>
+          <Icon name="lucide:map-pin" class="w-6 h-6 text-primary" />
+          <span>足迹 / Footprints</span>
         </h2>
 
-        <GitHubStats username="EveSunMaple" showLanguages={false} showCommitGraph={true} />
-      </section>
+        <div class="card bg-base-200 p-6 shadow-md">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <p class="text-sm text-base-content/70">
+                <b>已探索区域 / Cities explored</b>
+              </p>
 
-      <!-- Tech Stack -->
-      <section>
-        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Icon name="lucide:code-2" class="w-6 h-6 text-primary" />
-          <span>Tech Stack</span>
-        </h2>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {
-            [
-              { name: "Astro", icon: "simple-icons:astro", color: "oklch(0.5 0.2 300)" },
-              { name: "JavaScript", icon: "simple-icons:javascript", color: "oklch(0.8 0.2 80)" },
-              { name: "TypeScript", icon: "simple-icons:typescript", color: "oklch(0.6 0.2 250)" },
-              { name: "React", icon: "simple-icons:react", color: "oklch(0.7 0.2 200)" },
-              { name: "Node.js", icon: "simple-icons:nodedotjs", color: "oklch(0.7 0.2 140)" },
-              { name: "TailwindCSS", icon: "simple-icons:tailwindcss", color: "oklch(0.6 0.2 220)" },
-              { name: "HTML5", icon: "simple-icons:html5", color: "oklch(0.7 0.2 30)" },
-              { name: "CSS3", icon: "simple-icons:css3", color: "oklch(0.7 0.2 220)" },
-              { name: "Git", icon: "simple-icons:git", color: "oklch(0.7 0.2 30)" },
-              { name: "C++", icon: "simple-icons:cplusplus", color: "oklch(0.6 0.2 240)" },
-              { name: "C#", icon: "simple-icons:csharp", color: "oklch(0.6 0.2 160)" },
-              { name: "Python", icon: "simple-icons:python", color: "oklch(0.7 0.2 250)" },
-            ].map((tech) => (
-              <div class="flex flex-col items-center justify-center p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
-                <div class="text-3xl mb-2" style={`color: ${tech.color}`}>
-                  <Icon name={tech.icon} class="w-10 h-10" />
-                </div>
-                <span class="text-sm font-medium">{tech.name}</span>
+              <div class="join">
+                <button id="btnAll" class="btn btn-sm join-item btn-primary" type="button">全部</button>
+                <button id="btnThisYear" class="btn btn-sm join-item btn-outline" type="button">今年到访</button>
               </div>
-            ))
-          }
+            </div>
+
+            <!-- Legend -->
+            <div class="flex flex-wrap gap-3 text-sm items-center">
+              <span class="font-medium text-base-content/70">频次 / Frequency: </span>
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500"></span><span class="text-base-content/70">V</span></span>
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span><span class="text-base-content/70">IV</span></span>
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-purple-500"></span><span class="text-base-content/70">III</span></span>
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-base-content/70">II</span></span>
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-base-content/70">I</span></span>
+            </div>
+
+            <div class="bg-base-100/60 rounded-xl p-3 overflow-hidden">
+              <div class="rounded-xl overflow-hidden bg-base-100 shadow">
+                <svg
+                  id="footprintMap"
+                  viewBox="0 0 1000 680"
+                  class="w-full h-[420px] md:h-[520px]"
+                  role="img"
+                  aria-label="Footprints world map"
+                >
+                  <defs>
+                    <linearGradient id="seaGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="rgba(59,130,246,0.10)"></stop>
+                      <stop offset="100%" stop-color="rgba(168,85,247,0.07)"></stop>
+                    </linearGradient>
+
+                    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(100,116,139,0.12)" stroke-width="1" />
+                    </pattern>
+                  </defs>
+
+                  <!-- background -->
+                  <rect x="0" y="0" width="1000" height="680" fill="url(#seaGrad)" />
+                  <rect x="0" y="0" width="1000" height="680" fill="url(#grid)" />
+                  <rect x="18" y="18" width="964" height="644" rx="22" ry="22" fill="none" stroke="rgba(100,116,139,0.22)" />
+
+                  <!-- pan/zoom -->
+                  <g id="viewport">
+                    <!-- land silhouette (local svg, fast, no wall issues) -->
+                    <image
+                      href="/maps/world-land.svg"
+                      x="0"
+                      y="0"
+                      width="1000"
+                      height="680"
+                      opacity="0.30"
+                      style="filter: brightness(1.18) contrast(0.95);"
+                    />
+
+                    <!-- city points -->
+                    {
+                      FOOTPRINTS_CITIES.map((c) => {
+                        const lv = levelOf(c.visits);
+
+                        const dot =
+                          lv === "red" ? "fill-red-500" :
+                          lv === "orange" ? "fill-orange-500" :
+                          lv === "purple" ? "fill-purple-500" :
+                          lv === "blue" ? "fill-blue-500" : "fill-green-500";
+
+                        const tags = c.tags || [];
+                        const isHome = tags.includes("home");
+                        const isThisYear = tags.includes("thisYear");
+
+                        const r = 1;
+                        const showLabelByDefault = isHome || isThisYear;
+                        const shortName = c.name.split(" ")[0];
+
+                        // NOTE: we don't compute x/y here (client will do precise projection)
+                        return (
+                          <g
+                            class="city-point"
+                            data-lon={String(c.lon)}
+                            data-lat={String(c.lat)}
+                            data-tags={tags.join(",")}
+                            data-name={c.name}
+                            data-label-default={showLabelByDefault ? "1" : "0"}
+                          >
+                            <circle r={1.5} fill="rgba(255,255,255,0.60)" />
+                            <circle r={r} class={dot} />
+                            <text
+                              class="city-label"
+                              x="12"
+                              y="5"
+                              font-size="14"
+                              fill="rgba(15,23,42,0.78)"
+                              style="paint-order: stroke; stroke: rgba(255,255,255,0.95); stroke-width: 3px;"
+                            >
+                              {shortName}
+                            </text>
+                            <title>{`${c.name} · visits: ${c.visits}`}</title>
+                          </g>
+                        );
+                      })
+                    }
+                  </g>
+                </svg>
+              </div>
+
+              <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <p class="text-xs text-base-content/60 leading-relaxed">
+                  <span class="block">
+                    滚轮缩放、拖拽移动，单击城市点可查看更多内容。
+                  </span>
+                  <span class="hidden md:block">
+                    Supports zooming and panning; click a city point to view more details.
+                  </span>
+                </p>
+                <button id="btnReset" class="btn btn-xs btn-outline w-fit" type="button">
+                  重置视图
+                </button>
+              </div>
+
+            <div class="alert bg-base-100/60">
+              <Icon name="lucide:info" class="w-5 h-5" />
+              <span class="text-sm">
+                <span>非完全数据，</span><span class="thick-s">持续</span><span>随缘更新中，<b>保障个人隐私</b> / Incomplete data in progress &amp; <b>Protect privacy</b></span>
+                <style>
+                  .thick-s{
+                    position:relative;
+                    display:inline-block;
+                    white-space:nowrap; /* 保证本段不换行 */
+                  }
+                  .thick-s::after{
+                    content:"";
+                    position:absolute;
+                    left:0;
+                    right:0;
+                    top:52%;            /* 线在字的中部，想高/低可调 */
+                    height:2.5px;       /* 这里就是“删除线加粗”的粗细 */
+                    background:currentColor;
+                    transform:translateY(-50%);
+                    pointer-events:none;
+                  }
+                </style>
+              </span>
+            </div>
+          </div>
         </div>
+
+        <script is:inline>
+          const svg = document.getElementById("footprintMap");
+          const viewport = document.getElementById("viewport");
+          const btnAll = document.getElementById("btnAll");
+          const btnThisYear = document.getElementById("btnThisYear");
+          const btnReset = document.getElementById("btnReset");
+
+          const VIEW_W = 1000;
+          const VIEW_H = 680;
+
+          // ====== 默认聚焦：你想更“全中国”就改这里 ======
+          // 中国更居中：{ lon: 105, lat: 35 }；华东更居中：{ lon: 120, lat: 30 }
+          const DEFAULT_CENTER = { lon: 115, lat: 30 };
+          const DEFAULT_SCALE = 7;
+
+          const MIN_SCALE = 1.0;
+          const MAX_SCALE = 40.0; // 狠狠放大
+
+          // ====== 你要“凑参数”的地方（只影响点的位置，不改底图）======
+          // 偏南 -> latBiasDeg 设为正值（例如 +0.6）
+          // 偏东/西 -> lonBiasDeg 微调（例如 -0.3 / +0.3）
+          // scale 用来修正“整体比例”轻微偏差（一般别动，最多 1.01/0.99）
+          const TUNE = {
+            lonBiasDeg: -0.5,
+            latBiasDeg: 13.65,
+            lonScale: 1.0,
+            latScale: 1.0,
+          };
+
+          function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+          // ====== Web Mercator 投影（矩形世界地图最常见）======
+          // x: 线性经度
+          // y: 墨卡托纬度（格陵兰会变大）
+          function mercatorY01(latDeg) {
+            const lat = clamp(latDeg, -85, 85) * Math.PI / 180;
+            // 归一化到 [0,1]：0 顶部，1 底部
+            const y = Math.log(Math.tan(Math.PI / 4 + lat / 2));
+            // mercator(lat) 的范围大致 [-pi, +pi]（在 ±85°附近接近 ±pi）
+            // 更稳妥：用 mercator(±85) 作为上下界
+            const yMin = Math.log(Math.tan(Math.PI / 4 + (-85 * Math.PI/180) / 2));
+            const yMax = Math.log(Math.tan(Math.PI / 4 + ( 85 * Math.PI/180) / 2));
+            return (yMax - y) / (yMax - yMin);
+          }
+
+          function project(lon, lat) {
+            const lonAdj = (lon + TUNE.lonBiasDeg) * TUNE.lonScale;
+            const latAdj = (lat + TUNE.latBiasDeg) * TUNE.latScale;
+
+            const x01 = (lonAdj + 180) / 360;
+            const y01 = mercatorY01(latAdj);
+
+            return {
+              x: x01 * VIEW_W,
+              y: y01 * VIEW_H,
+            };
+          }
+
+          // ====== 把点移动到正确位置（不显示文字）======
+          function layoutPoints() {
+            const points = svg.querySelectorAll(".city-point");
+            points.forEach((p) => {
+              const lon = Number(p.getAttribute("data-lon"));
+              const lat = Number(p.getAttribute("data-lat"));
+              if (!isFinite(lon) || !isFinite(lat)) return;
+
+              const { x, y } = project(lon, lat);
+              p.setAttribute("transform", `translate(${x.toFixed(2)}, ${y.toFixed(2)})`);
+
+              // 确保地图上不显示文字
+              const text = p.querySelector("text");
+              if (text) text.style.display = "none";
+
+              // 如果没 note，给默认
+              if (!p.getAttribute("data-note")) {
+                p.setAttribute("data-note", "2026-01-01 解锁该城市");
+              }
+            });
+          }
+
+          // ====== 强制统一点大小：彩点=1，晕=1.5 ======
+          function normalizeDots() {
+            const points = svg.querySelectorAll(".city-point");
+            points.forEach((p) => {
+              const circles = p.querySelectorAll("circle");
+              if (circles.length >= 2) {
+                // 默认：第一个 circle 当晕圈，第二个当实心点（与你之前结构一致）
+                circles[0].setAttribute("r", "1.5");
+                circles[1].setAttribute("r", "1");
+              } else if (circles.length === 1) {
+                circles[0].setAttribute("r", "1");
+              }
+            });
+          }
+
+          // ====== 平移缩放 ======
+          let scale = 1;
+          let tx = 0;
+          let ty = 0;
+          let mode = "all";
+
+          function clampToFrame() {
+            // 不露白：viewport 缩放后必须覆盖整个 viewBox
+            const minTx = VIEW_W - VIEW_W * scale;
+            const maxTx = 0;
+            const minTy = VIEW_H - VIEW_H * scale;
+            const maxTy = 0;
+            tx = clamp(tx, minTx, maxTx);
+            ty = clamp(ty, minTy, maxTy);
+          }
+
+          function applyTransform() {
+            clampToFrame();
+            viewport.setAttribute("transform", `translate(${tx}, ${ty}) scale(${scale})`);
+          }
+
+          function applyMode() {
+            const points = svg.querySelectorAll(".city-point");
+            points.forEach((p) => {
+              const tags = (p.getAttribute("data-tags") || "").split(",").map(s => s.trim()).filter(Boolean);
+              const show = mode === "all" ? true : tags.includes("thisYear");
+              p.style.display = show ? "block" : "none";
+            });
+          }
+
+          function setMode(nextMode) {
+            mode = nextMode;
+
+            if (btnAll && btnThisYear) {
+              if (mode === "all") {
+                btnAll.classList.add("btn-primary");
+                btnAll.classList.remove("btn-outline");
+                btnThisYear.classList.add("btn-outline");
+                btnThisYear.classList.remove("btn-primary");
+              } else {
+                btnThisYear.classList.add("btn-primary");
+                btnThisYear.classList.remove("btn-outline");
+                btnAll.classList.add("btn-outline");
+                btnAll.classList.remove("btn-primary");
+              }
+            }
+            applyMode();
+          }
+
+          function setViewToCenterLonLat(centerLon, centerLat, nextScale) {
+            scale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
+            const { x, y } = project(centerLon, centerLat);
+            tx = VIEW_W / 2 - x * scale;
+            ty = VIEW_H / 2 - y * scale;
+            applyTransform();
+          }
+
+          // ====== 缩放：以鼠标为中心 ======
+          svg?.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            const delta = Math.sign(e.deltaY);
+            const factor = delta > 0 ? 0.90 : 1.12;
+            const next = clamp(scale * factor, MIN_SCALE, MAX_SCALE);
+
+            const rect = svg.getBoundingClientRect();
+            const cx = ((e.clientX - rect.left) / rect.width) * VIEW_W;
+            const cy = ((e.clientY - rect.top) / rect.height) * VIEW_H;
+
+            tx = cx - (cx - tx) * (next / scale);
+            ty = cy - (cy - ty) * (next / scale);
+            scale = next;
+            applyTransform();
+            hideTip();
+          }, { passive: false });
+
+          // ====== 拖拽平移 ======
+          let dragging = false;
+          let lastX = 0, lastY = 0;
+
+          svg?.addEventListener("mousedown", (e) => {
+            dragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            hideTip();
+          });
+          window.addEventListener("mouseup", () => dragging = false);
+          window.addEventListener("mousemove", (e) => {
+            if (!dragging) return;
+            const dx = (e.clientX - lastX);
+            const dy = (e.clientY - lastY);
+            tx += dx / scale;
+            ty += dy / scale;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            applyTransform();
+          });
+
+          // ====== 点击显示卡片（城市名 + 一行介绍）======
+          let tipEl = null;
+
+          function ensureTip() {
+            if (tipEl) return tipEl;
+
+            tipEl = document.createElement("div");
+            tipEl.id = "cityTip";
+            tipEl.style.position = "fixed";
+            tipEl.style.zIndex = "50";
+            tipEl.style.maxWidth = "260px";
+            tipEl.style.pointerEvents = "auto";
+            tipEl.style.display = "none";
+            tipEl.className = "card bg-base-100 shadow-lg border border-base-200 rounded-xl";
+
+            tipEl.innerHTML = `
+              <div class="card-body p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div id="tipTitle" class="font-bold text-base"></div>
+                    <div id="tipNote" class="text-sm text-base-content/70 mt-1"></div>
+                  </div>
+                  <button id="tipClose" class="btn btn-ghost btn-xs">✕</button>
+                </div>
+              </div>
+            `;
+
+            document.body.appendChild(tipEl);
+            tipEl.querySelector("#tipClose").addEventListener("click", hideTip);
+
+            window.addEventListener("click", (ev) => {
+              if (!tipEl || tipEl.style.display === "none") return;
+              if (tipEl.contains(ev.target)) return;
+              const isPoint = ev.target && ev.target.closest && ev.target.closest(".city-point");
+              if (!isPoint) hideTip();
+            });
+
+            return tipEl;
+          }
+
+          function hideTip() {
+            if (!tipEl) return;
+            tipEl.style.display = "none";
+          }
+
+          function showTipForPoint(pointEl, clientX, clientY) {
+            const tip = ensureTip();
+            const name = pointEl.getAttribute("data-name") || "Unknown";
+            const note = pointEl.getAttribute("data-note") || "（未填写解锁信息）";
+
+            tip.querySelector("#tipTitle").textContent = name;
+            tip.querySelector("#tipNote").textContent = note;
+
+            const pad = 12;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            tip.style.display = "block";
+            tip.style.left = "0px";
+            tip.style.top = "0px";
+
+            const rect = tip.getBoundingClientRect();
+            let left = clientX + pad;
+            let top = clientY + pad;
+
+            if (left + rect.width > vw - 10) left = clientX - rect.width - pad;
+            if (top + rect.height > vh - 10) top = clientY - rect.height - pad;
+
+            tip.style.left = `${Math.max(10, left)}px`;
+            tip.style.top = `${Math.max(10, top)}px`;
+          }
+
+          svg?.addEventListener("click", (e) => {
+            const target = e.target;
+            const p = target && target.closest ? target.closest(".city-point") : null;
+            if (!p) return;
+            if (p.style.display === "none") return;
+            showTipForPoint(p, e.clientX, e.clientY);
+          });
+
+          // ====== buttons ======
+          btnReset?.addEventListener("click", () => {
+            setViewToCenterLonLat(DEFAULT_CENTER.lon, DEFAULT_CENTER.lat, DEFAULT_SCALE);
+          });
+          btnAll?.addEventListener("click", () => setMode("all"));
+          btnThisYear?.addEventListener("click", () => setMode("thisYear"));
+
+          // ====== init ======
+          layoutPoints();
+          normalizeDots();
+          setMode("all");
+          setViewToCenterLonLat(DEFAULT_CENTER.lon, DEFAULT_CENTER.lat, DEFAULT_SCALE);
+        </script>
+
+
+
       </section>
 
       <!-- Contribution Activity -->
-      <section>
+      <section class="mt-8">
         <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
           <Icon name="lucide:activity" class="w-6 h-6 text-primary" />
-          <span>Recent Activity</span>
+          <span>近期活动 / Recent Activity</span>
         </h2>
 
         <div class="bg-base-200 rounded-xl p-6 overflow-x-auto">
           <div class="flex flex-col md:flex-row gap-8 md:gap-4 md:overflow-x-auto md:pb-2">
             {
               [
-                {
-                  date: "January 2024",
-                  title: "Open Source Contributions",
-                  desc: "Contributed to several open source projects, focusing on performance optimizations.",
-                },
-                {
-                  date: "March 2024",
-                  title: "Initiated Frosti Project",
-                  desc: "Started development of the Frosti blog theme for Astro, focusing on modern design principles.",
-                },
-                {
-                  date: "July 2024",
-                  title: "Released Frosti v2",
-                  desc: "Published version 2 with improved responsive design and extended plugin support.",
-                },
-                {
-                  date: "March 2025",
-                  title: "Released Frosti v3",
-                  desc: "Launched version 3 of the Frosti blog theme with enhanced performance and new customization options.",
-                },
+                { date: "1/14/2026", title: "博客建立 Blog established", desc: "Hello World!" },
+                { date: "1/26/2026", title: "持续更新中 Continuously updating", desc: "欢迎持续关注 Welcome to continue to visit" },
               ].map((item, i) => (
                 <div class="relative flex gap-4 pb-2 md:pb-0 md:min-w-[250px]">
                   <div class="flex flex-col items-center">
