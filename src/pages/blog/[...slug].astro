@@ -1,5 +1,7 @@
 ---
-import { type CollectionEntry, getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+
 import License from "@components/widgets/License.astro";
 import PostFilter from "@components/widgets/PostFilter.astro";
 import PostInfo from "@components/widgets/PostInfo.astro";
@@ -9,19 +11,17 @@ import dayjs from "@utils/dayjs";
 import MainCard from "@/components/MainCard.astro";
 import Waline from "@/components/comments/Waline.astro";
 
+type BlogEntry = CollectionEntry<"blog">;
+
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
-  return posts.map((blog) => ({
+  return posts.map((blog: BlogEntry) => ({
     params: { slug: blog.slug },
     props: { blog },
   }));
 }
 
-interface Props {
-  blog: CollectionEntry<"blog">;
-}
-
-const { blog } = Astro.props;
+const { blog } = Astro.props as { blog: BlogEntry };
 
 const { Content, remarkPluginFrontmatter, headings } = await blog.render();
 
@@ -32,12 +32,11 @@ const displayDate = blog.data.pubDate
 const image = new URL(`/og/${blog.slug}.png`, Astro.site).toString();
 const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
 
-// Waline server URL (NOT your blog URL)
+// Waline server URL from env
 const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL as string | undefined;
 
 // Optional: allow per-post disable via frontmatter `comments: false`
-const commentsEnabled = (blog.data as any).comments === false ? false : true;
-
+const commentsEnabled = (blog.data as Record<string, unknown>).comments === false ? false : true;
 const canRenderComments = commentsEnabled && !!WALINE_SERVER_URL;
 ---
 
@@ -86,7 +85,7 @@ const canRenderComments = commentsEnabled && !!WALINE_SERVER_URL;
 
         {canRenderComments && (
           <section class="mt-10 pt-6 border-t border-base-content/10">
-            <h2 class="text-2xl font-semibold mb-4">评论 / Comments</h2>
+            <h2 class="text-2xl font-semibold mb-4">Comments</h2>
             <Waline
               serverURL={WALINE_SERVER_URL}
               lang="zh-CN"
