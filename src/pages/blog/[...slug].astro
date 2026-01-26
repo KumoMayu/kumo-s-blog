@@ -8,8 +8,8 @@ import PostInfo from "@components/widgets/PostInfo.astro";
 import { DATE_FORMAT } from "@config";
 import BaseLayout from "@layouts/BaseLayout.astro";
 import dayjs from "@utils/dayjs";
-import MainCard from "@/components/MainCard.astro";
 import Waline from "@/components/comments/Waline.astro";
+import MainCard from "@/components/MainCard.astro";
 
 type BlogEntry = CollectionEntry<"blog">;
 
@@ -33,10 +33,13 @@ const image = new URL(`/og/${blog.slug}.png`, Astro.site).toString();
 const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
 
 // Waline server URL from env
-const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL as string | undefined;
+const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL as
+  | string
+  | undefined;
 
 // Optional: allow per-post disable via frontmatter `comments: false`
-const commentsEnabled = (blog.data as Record<string, unknown>).comments === false ? false : true;
+const commentsEnabled =
+  (blog.data as Record<string, unknown>).comments !== false;
 const canRenderComments = commentsEnabled && !!WALINE_SERVER_URL;
 ---
 
