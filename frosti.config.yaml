@@ -31,20 +31,17 @@ site:
       subItems:
         - id: all
           text: 全部文章 All
-          href: /
-          #href: /blog
+          href: /blog
           svg: "material-symbols:ink-pen-outline-rounded"
           target: _self
         - id: documentation
           text: 文档 Documentation
-          href: /
-          #href: /blog/category/Documentation
+          href: /blog/category/Documentation
           svg: "material-symbols:unknown-document-outline-rounded"
           target: _self
-        - id: examples
-          text: 示例 Examples
-          href: /
-          #href: /blog/category/Examples
+        - id: Changelog
+          text: 日志 Changlog
+          href: /blog/category/Changelog
           svg: "material-symbols:deployed-code-outline"
           target: _self
     - id: project

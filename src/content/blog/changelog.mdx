@@ -1,0 +1,54 @@
+---
+title: 网站更新日志 | Updates
+description: 网站的公开更新和公告。 Public updates and announcements on my personal blog website.
+pubDate: 2026-01-26
+updated: 2026-01-26
+badge: Pin
+categories:
+  - Changelog
+tags:
+  - Update
+  - Announcement
+---
+
+## 更新日志 · Changelog
+
+这里记录我的博客与内容的重要更新。  
+Short notes, public-facing, and always evolving.
+
+import TimeLine from "../../components/mdx/TimeLine.astro";
+
+<TimeLine
+  items={[
+    {
+      year: "Jan 26, 2026",
+      eventHtml: `
+        <div class="space-y-2">
+          <div class="text-base font-semibold leading-snug">来关注我的博客文章吧</div>
+          <div class="text-base font-semibold leading-snug">Explore my writing, thoughts, and ongoing updates.</div>
+          <div class="text-xs opacity-60">Updated by Kumo</div>
+        </div>
+      `,
+    },
+    {
+      year: "Jan 25, 2026",
+      eventHtml: `
+        <div class="space-y-2">
+          <div class="text-base font-semibold leading-snug">都来瞧瞧</div>
+          <div class="text-base font-semibold leading-snug">My personal blog is now open to everyone.</div>
+          <div class="text-xs opacity-60">Updated by Kumo</div>
+        </div>
+      `,
+    },
+    {
+      year: "Jan 14, 2026",
+      eventHtml: `
+        <div class="space-y-2">
+          <div class="text-base font-semibold leading-snug">你好，全新的博客</div>
+          <div class="text-base font-semibold leading-snug">A new personal space on the web.</div>
+          <div class="text-xs opacity-60">Updated by Kumo</div>
+        </div>
+      `,
+    },
+  ]}
+/>

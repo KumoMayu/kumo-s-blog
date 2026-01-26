@@ -7,25 +7,38 @@ import { DATE_FORMAT } from "@config";
 import BaseLayout from "@layouts/BaseLayout.astro";
 import dayjs from "@utils/dayjs";
 import MainCard from "@/components/MainCard.astro";
+import Waline from "@/components/comments/Waline.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
-  return posts.map((blog: { slug: any }) => ({
+  return posts.map((blog) => ({
     params: { slug: blog.slug },
     props: { blog },
   }));
 }
+
 interface Props {
   blog: CollectionEntry<"blog">;
 }
 
 const { blog } = Astro.props;
+
 const { Content, remarkPluginFrontmatter, headings } = await blog.render();
+
 const displayDate = blog.data.pubDate
   ? dayjs(blog.data.pubDate).format(DATE_FORMAT)
   : "";
+
 const image = new URL(`/og/${blog.slug}.png`, Astro.site).toString();
 const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
+
+// Waline server URL (NOT your blog URL)
+const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL as string | undefined;
+
+// Optional: allow per-post disable via frontmatter `comments: false`
+const commentsEnabled = (blog.data as any).comments === false ? false : true;
+
+const canRenderComments = commentsEnabled && !!WALINE_SERVER_URL;
 ---
 
 <BaseLayout
@@ -35,7 +48,12 @@ const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
   headings={headings}
   showTOC={true}
 >
-  <MainCard title={blog.data.title} description={blog.data.description} image={blog.data.image} infoIcon="lucide:info">
+  <MainCard
+    title={blog.data.title}
+    description={blog.data.description}
+    image={blog.data.image}
+    infoIcon="lucide:info"
+  >
     <PostInfo
       pubDate={displayDate}
       badge={blog.data.badge}
@@ -48,8 +66,12 @@ const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
     </div>
 
     <div class="mt-8">
-      <div id="content" class="prose max-w-none prose-headings:scroll-mt-20 prose-img:rounded-xl prose-img:mx-auto">
+      <div
+        id="content"
+        class="prose max-w-none prose-headings:scroll-mt-20 prose-img:rounded-xl prose-img:mx-auto"
+      >
         <Content />
+
         <License
           url={url}
           title={blog.data.title}
@@ -61,6 +83,28 @@ const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
           word={remarkPluginFrontmatter.totalCharCount}
           time={remarkPluginFrontmatter.readingTime}
         />
+
+        {canRenderComments && (
+          <section class="mt-10 pt-6 border-t border-base-content/10">
+            <h2 class="text-2xl font-semibold mb-4">评论 / Comments</h2>
+            <Waline
+              serverURL={WALINE_SERVER_URL}
+              lang="zh-CN"
+              reaction={true}
+              pageview={true}
+            />
+          </section>
+        )}
+
+        {!WALINE_SERVER_URL && commentsEnabled && (
+          <section class="mt-10 pt-6 border-t border-base-content/10">
+            <h2 class="text-2xl font-semibold mb-2">Comments</h2>
+            <p class="opacity-70 text-sm">
+              Comment system is not configured. Please set{" "}
+              <code>PUBLIC_WALINE_SERVER_URL</code>.
+            </p>
+          </section>
+        )}
       </div>
     </div>
   </MainCard>

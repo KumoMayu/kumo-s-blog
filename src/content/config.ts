@@ -9,6 +9,7 @@ const blog = defineCollection({
     updated: z.coerce.date().optional(),
     image: z.string().optional(),
     badge: z.string().optional(),
+    pinned: z.boolean().default(false),
     draft: z.boolean().default(false),
     categories: z
       .array(z.string())

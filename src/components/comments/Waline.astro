@@ -1,0 +1,119 @@
+---
+// src/components/comments/Waline.astro
+interface Props {
+  serverURL: string;
+  lang?: string;
+  dark?: string;
+  reaction?: boolean;
+  pageview?: boolean;
+}
+
+const {
+  serverURL,
+  lang = "zh-CN",
+  dark = "html[data-theme-type='dark']",
+  reaction = true,
+  pageview = true,
+} = Astro.props;
+---
+
+<div id="waline-container"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
+
+<script
+  type="module"
+  define:vars={{ serverURL, lang, dark, reaction, pageview }}
+>
+  import { init } from "https://unpkg.com/@waline/client@v3/dist/waline.js";
+
+  function initWaline() {
+    const container = document.querySelector("#waline-container");
+    if (!container) return;
+
+    init({
+      el: "#waline-container",
+      serverURL,
+      path: location.pathname,
+      lang,
+      dark,
+      reaction,
+      pageview,
+    });
+  }
+
+  document.addEventListener("astro:page-load", initWaline);
+</script>
+
+<style>
+  /* Keep spacing consistent with Frosti prose */
+  #waline-container {
+    margin-top: 2rem;
+  }
+
+  /* Waline v3 uses CSS variables; set them to match site theme */
+  #waline-container {
+    /* These fallbacks are safe even if some vars don't exist */
+    --waline-font-size: 16px;
+    --waline-border-radius: 0.75rem;
+
+    /* colors - align with daisyUI/Frosti-like tokens */
+    --waline-bgcolor: transparent;
+    --waline-bgcolor-light: transparent;
+
+    --waline-color: rgba(0, 0, 0, 0.85);
+    --waline-color-light: rgba(0, 0, 0, 0.55);
+
+    --waline-border-color: rgba(0, 0, 0, 0.12);
+    --waline-border-color-light: rgba(0, 0, 0, 0.08);
+
+    --waline-disable-bgcolor: rgba(0, 0, 0, 0.04);
+    --waline-disable-color: rgba(0, 0, 0, 0.35);
+  }
+
+  /* Dark mode (your site sets html[data-theme-type='dark']) */
+  html[data-theme-type="dark"] #waline-container {
+    --waline-color: rgba(255, 255, 255, 0.9);
+    --waline-color-light: rgba(255, 255, 255, 0.6);
+
+    --waline-border-color: rgba(255, 255, 255, 0.14);
+    --waline-border-color-light: rgba(255, 255, 255, 0.10);
+
+    --waline-disable-bgcolor: rgba(255, 255, 255, 0.06);
+    --waline-disable-color: rgba(255, 255, 255, 0.35);
+  }
+
+  /* Make inputs/buttons feel like your rounded UI */
+  #waline-container .wl-editor,
+  #waline-container .wl-panel,
+  #waline-container .wl-card,
+  #waline-container .wl-comment {
+    border-radius: 0.75rem;
+  }
+
+  /* Reduce "boxed" feeling */
+  #waline-container .wl-panel {
+    background: transparent;
+    border: 1px solid var(--waline-border-color);
+  }
+
+  /* Buttons: subtle, consistent */
+  #waline-container .wl-btn {
+    border-radius: 0.75rem;
+    border: 1px solid var(--waline-border-color);
+    background: transparent;
+  }
+
+  #waline-container .wl-btn.primary {
+    border-color: transparent;
+  }
+
+  /* Links: inherit better */
+  #waline-container a {
+    text-decoration: none;
+  }
+  #waline-container a:hover {
+    text-decoration: underline;
+  }
+</style>
+
