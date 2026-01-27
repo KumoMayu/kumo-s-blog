@@ -11,6 +11,7 @@ const blog = defineCollection({
     badge: z.string().optional(),
     pinned: z.boolean().default(false),
     draft: z.boolean().default(false),
+    comments: z.boolean().optional(),
     categories: z
       .array(z.string())
       .refine((items: string[]) => new Set(items).size === items.length, {

@@ -1,9 +1,11 @@
 ---
-// src/components/comments/Waline.astro
 interface Props {
   serverURL: string;
   lang?: string;
   dark?: string;
+  emoji?: string[];
+  meta?: string[];
+  requiredMeta?: string[];
   reaction?: boolean;
   pageview?: boolean;
 }
@@ -12,10 +14,17 @@ const {
   serverURL,
   lang = "zh-CN",
   dark = "html[data-theme-type='dark']",
+  emoji = [
+    "https://unpkg.com/@waline/emojis@1.1.0/weibo",
+    "https://unpkg.com/@waline/emojis@1.1.0/bilibili",
+  ],
+  meta = ["nick", "mail", "link"],
+  requiredMeta = [],
   reaction = true,
   pageview = true,
 } = Astro.props;
 ---
+
 
 <div id="waline-container"></div>
 
@@ -46,75 +55,52 @@ const {
   document.addEventListener("astro:page-load", initWaline);
 </script>
 
-<style>
-  /* Keep spacing consistent with Frosti prose */
+<style is:global>
+  /* 只作用于你这个容器 */
   #waline-container {
-    margin-top: 2rem;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid hsl(var(--bc) / 0.12);
   }
 
-  /* Waline v3 uses CSS variables; set them to match site theme */
-  #waline-container {
-    /* These fallbacks are safe even if some vars don't exist */
-    --waline-font-size: 16px;
-    --waline-border-radius: 0.75rem;
-
-    /* colors - align with daisyUI/Frosti-like tokens */
-    --waline-bgcolor: transparent;
-    --waline-bgcolor-light: transparent;
-
-    --waline-color: rgba(0, 0, 0, 0.85);
-    --waline-color-light: rgba(0, 0, 0, 0.55);
-
-    --waline-border-color: rgba(0, 0, 0, 0.12);
-    --waline-border-color-light: rgba(0, 0, 0, 0.08);
-
-    --waline-disable-bgcolor: rgba(0, 0, 0, 0.04);
-    --waline-disable-color: rgba(0, 0, 0, 0.35);
+  /* Frosti/Prose 环境下容易把 Waline 的行高/间距挤坏，统一重置 */
+  #waline-container,
+  #waline-container * {
+    line-height: normal;
   }
 
-  /* Dark mode (your site sets html[data-theme-type='dark']) */
-  html[data-theme-type="dark"] #waline-container {
-    --waline-color: rgba(255, 255, 255, 0.9);
-    --waline-color-light: rgba(255, 255, 255, 0.6);
-
-    --waline-border-color: rgba(255, 255, 255, 0.14);
-    --waline-border-color-light: rgba(255, 255, 255, 0.10);
-
-    --waline-disable-bgcolor: rgba(255, 255, 255, 0.06);
-    --waline-disable-color: rgba(255, 255, 255, 0.35);
+  /* 反应区（评分/表情）避免被挤到一行导致遮挡 */
+  #waline-container .wl-reaction {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
   }
 
-  /* Make inputs/buttons feel like your rounded UI */
-  #waline-container .wl-editor,
+  /* 卡片更像 Frosti 的圆角/底色 */
   #waline-container .wl-panel,
-  #waline-container .wl-card,
-  #waline-container .wl-comment {
+  #waline-container .wl-card {
+    border-radius: 1rem;
+    background: hsl(var(--b1));
+    border: 1px solid hsl(var(--bc) / 0.12);
+  }
+
+  /* 头像对齐/大小 */
+  #waline-container .wl-user-avatar,
+  #waline-container .wl-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  /* 输入框/按钮跟随主题 */
+  #waline-container textarea,
+  #waline-container input {
+    background: hsl(var(--b1));
+    border: 1px solid hsl(var(--bc) / 0.12);
     border-radius: 0.75rem;
-  }
-
-  /* Reduce "boxed" feeling */
-  #waline-container .wl-panel {
-    background: transparent;
-    border: 1px solid var(--waline-border-color);
-  }
-
-  /* Buttons: subtle, consistent */
-  #waline-container .wl-btn {
-    border-radius: 0.75rem;
-    border: 1px solid var(--waline-border-color);
-    background: transparent;
-  }
-
-  #waline-container .wl-btn.primary {
-    border-color: transparent;
-  }
-
-  /* Links: inherit better */
-  #waline-container a {
-    text-decoration: none;
-  }
-  #waline-container a:hover {
-    text-decoration: underline;
   }
 </style>
+
 

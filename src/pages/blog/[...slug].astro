@@ -32,15 +32,15 @@ const displayDate = blog.data.pubDate
 const image = new URL(`/og/${blog.slug}.png`, Astro.site).toString();
 const url = new URL(`/blog/${blog.slug}`, Astro.url.origin);
 
-// Waline server URL from env
-const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL as
-  | string
-  | undefined;
+// Waline server URL from env (PUBLIC_ 才能在客户端用)
+const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL;
 
-// Optional: allow per-post disable via frontmatter `comments: false`
-const commentsEnabled =
-  (blog.data as Record<string, unknown>).comments !== false;
-const canRenderComments = commentsEnabled && !!WALINE_SERVER_URL;
+// 文章 frontmatter 支持 comments: false
+const commentsEnabled = blog.data.comments !== false;
+
+// 是否真的渲染评论（两者都满足）
+const canRenderComments = commentsEnabled && typeof WALINE_SERVER_URL === "string" && WALINE_SERVER_URL.length > 0;
+
 ---
 
 <BaseLayout
@@ -87,8 +87,8 @@ const canRenderComments = commentsEnabled && !!WALINE_SERVER_URL;
         />
 
         {canRenderComments && (
-          <section class="mt-10 pt-6 border-t border-base-content/10">
-            <h2 class="text-2xl font-semibold mb-4">Comments</h2>
+          <section class="not-prose mt-10 pt-6 border-t border-base-content/10">
+            <h2 class="text-2xl font-semibold mb-4">评论 / Comments</h2>
             <Waline
               serverURL={WALINE_SERVER_URL}
               lang="zh-CN"
