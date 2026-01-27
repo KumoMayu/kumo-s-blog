@@ -39,8 +39,10 @@ const WALINE_SERVER_URL = import.meta.env.PUBLIC_WALINE_SERVER_URL;
 const commentsEnabled = blog.data.comments !== false;
 
 // 是否真的渲染评论（两者都满足）
-const canRenderComments = commentsEnabled && typeof WALINE_SERVER_URL === "string" && WALINE_SERVER_URL.length > 0;
-
+const canRenderComments =
+  commentsEnabled &&
+  typeof WALINE_SERVER_URL === "string" &&
+  WALINE_SERVER_URL.length > 0;
 ---
 
 <BaseLayout
