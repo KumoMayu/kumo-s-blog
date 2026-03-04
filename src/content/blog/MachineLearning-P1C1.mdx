@@ -1,0 +1,151 @@
+---
+title: Machine Learning Specialization（Part 1 · Cycle 1）课程笔记
+comments: false
+description: Based on notes from Professor Andrew Ng's Machine Learning Specialization 2022 course, this is Cycle 1, Part 1.
+pubDate: 2026-03-04
+updated: 2026-03-04
+categories:
+  - Notebooks
+tags:
+  - Machine Learning
+---
+
+<div class="post-strong">
+
+Part 1 的课程主题是 **Supervised Machine Learning: Regression and Classification**。
+
+## 机器学习的分类
+
+机器学习任务按是否存在标签（label）划分为监督学习（Supervised Learning）与非监督学习（Unsupervised Learning）。
+
+- **Machine Learning**
+  - **Supervised Learning（监督学习）**
+    - **Regression（回归）**：输出连续数值
+    - **Classification（分类）**：输出离散类别（可为二分类或多分类）
+  - **Unsupervised Learning（非监督学习）**
+    - **Clustering（聚类）**（Google News 新闻聚类，DNA microarray，Grouping customers）
+    - **Anomaly Detection（异常检测）**
+    - **Dimensionality Reduction（降维）**
+
+## 代价函数
+
+在线性回归中，预测函数写作
+
+$$
+f_{w,b}(x)=wx+b
+$$
+
+其中 $w,b$ 为参数，$x$ 为输入特征。对第 $i$ 个训练样本 $(x^{(i)}, y^{(i)})$，预测值记为
+
+$$
+\hat y^{(i)} = f_{w,b}(x^{(i)})
+$$
+
+训练问题的核心并不是给出一条“看起来合适”的直线，而是用统一标准衡量参数 $(w,b)$ 的优劣。平方误差代价函数（squared error cost function）将这一点写成可计算的形式：
+
+$$
+J(w,b)=\frac{1}{2m}\sum_{i=1}^{m}\left(\hat y^{(i)}-y^{(i)}\right)^2
+=\frac{1}{2m}\sum_{i=1}^{m}\left(f_{w,b}(x^{(i)})-y^{(i)}\right)^2
+$$
+
+这里 $m$ 为训练样本数。于是训练目标可以写为
+
+$$
+\min_{w,b} J(w,b)
+$$
+
+到这一步为止，线性回归训练已经被完整表述为一个优化问题：参数 $(w,b)$ 的选择不再依赖直观调节，而由目标函数最小化给出。记号层面在这里也完成统一：$x^{(i)}$、$y^{(i)}$、$\hat y^{(i)}$、$m$、$f_{w,b}(x)$、$J(w,b)$ 会在后续推导与实现中持续出现，保持一致比额外扩展术语更重要。
+
+在参数空间中观察 $J(w,b)$ 时，常见表示方式是曲面图与等高线图；它们的作用主要在于把后续参数更新过程转化为几何上的“下降轨迹”。
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-c1w1-cost-surface-contour.png"
+    alt="Cost function surface and contour"
+    style={{ width: "80%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+
+## 梯度下降
+
+梯度下降（Gradient Descent）是一个通用优化方法，用于最小化目标函数。在当前场景中，它作用于 $J(w,b)$；在更一般的情形中，也可以作用于更高维参数下的目标函数。在线性回归中，梯度下降给出了一套明确的参数更新规则。
+
+在线性回归的双参数形式下，梯度下降写作：
+
+$$
+\text{repeat until convergence }
+\left\{
+\begin{aligned}
+w &= w-\alpha \frac{\partial}{\partial w}J(w,b) \\\\
+b &= b-\alpha \frac{\partial}{\partial b}J(w,b)
+\end{aligned}
+\right.
+$$
+
+其中 $\alpha$ 为学习率（learning rate）。这一表达式已经给出算法骨架：从某个初始参数出发，重复依据当前点的局部导数更新参数，直到收敛。若只看单参数形式
+
+$$
+w = w-\alpha \frac{d}{dw}J(w)
+$$
+
+则更新方向更容易理解：导数为正时参数减小，导数为负时参数增大，更新方向始终朝向使目标函数下降的一侧。接近最小值时导数变小，更新步长也会自然变小，因此在不少情况下即使 $\alpha$ 固定，仍然可以逐步收敛到最小值附近。
+
+学习率的作用需要单独保留：$\alpha$ 过小时更新过慢，$\alpha$ 过大时可能越过最小值并出现震荡，甚至发散。实际实现中，公式无误但训练效果异常，常见原因往往首先落在学习率选择上。
+
+将线性回归模型代入代价函数后，可得到梯度下降所需的具体偏导数。记
+
+$$
+J(w,b)=\frac{1}{2m}\sum_{i=1}^{m}\left(wx^{(i)}+b-y^{(i)}\right)^2
+$$
+
+则有
+
+$$
+\frac{\partial}{\partial w}J(w,b)=\frac{1}{m}\sum_{i=1}^{m}\left(f_{w,b}(x^{(i)})-y^{(i)}\right)x^{(i)}
+$$
+
+$$
+\frac{\partial}{\partial b}J(w,b)=\frac{1}{m}\sum_{i=1}^{m}\left(f_{w,b}(x^{(i)})-y^{(i)}\right)
+$$
+
+代回更新式后，线性回归的梯度下降形式为
+
+$$
+\text{repeat until convergence }
+\left\{
+\begin{aligned}
+w &= w-\alpha \cdot \frac{1}{m}\sum_{i=1}^{m}\left(f_{w,b}(x^{(i)})-y^{(i)}\right)x^{(i)} \\\\
+b &= b-\alpha \cdot \frac{1}{m}\sum_{i=1}^{m}\left(f_{w,b}(x^{(i)})-y^{(i)}\right)
+\end{aligned}
+\right.
+$$
+
+每一步更新都使用全部训练样本，因此这里对应的是 **Batch Gradient Descent**。这一点在本阶段主要是计算方式上的确认：参数更新基于整批数据，而不是部分样本。
+
+从实现角度看，这一部分最容易出错的地方并不在推导，而在更新顺序。理论表达要求 $w$ 与 $b$ 在同一轮中基于旧参数同时更新，因此实现时应先计算临时量，再统一赋值。下面给出一个简洁的 Python 风格片段，用于固定实现逻辑：
+
+```python
+for _ in range(num_iters):
+    dj_dw = 0.0
+    dj_db = 0.0
+
+    for i in range(m):
+        f_wb = w * x[i] + b
+        dj_dw += (f_wb - y[i]) * x[i]
+        dj_db += (f_wb - y[i])
+
+    dj_dw = dj_dw / m
+    dj_db = dj_db / m
+
+    # simultaneously update w and b
+    tmp_w = w - alpha * dj_dw
+    tmp_b = b - alpha * dj_db
+    w = tmp_w
+    b = tmp_b
+```
+
+参数空间中的下降过程、数据空间中的拟合直线变化以及代价函数值的下降，本质上是同一过程在不同表示下的对应。在线性回归的平方误差代价函数场景中，目标函数呈碗形（bowl shape）并具有凸性（convexity），因此优化过程的几何结构相对清晰，这也使它成为理解梯度下降的合适起点。
+
+<div style={{ display: "flex", justifyContent: "center" }}> <img src="/image/ml-c1w1-gradient-descent-learning-rate.png" alt="Gradient descent intuition and learning rate effects" style={{ width: "78%", height: "auto", borderRadius: "12px" }} loading="lazy" /> </div>
+</div>

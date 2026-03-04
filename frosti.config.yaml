@@ -35,8 +35,8 @@ site:
           svg: "material-symbols:ink-pen-outline-rounded"
           target: _self
         - id: documentation
-          text: 文档 Documentation
-          href: /blog/category/Documentation
+          text: 笔记 Notebooks
+          href: /blog/category/Notebooks
           svg: "material-symbols:unknown-document-outline-rounded"
           target: _self
         - id: Changelog

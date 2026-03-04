@@ -669,3 +669,27 @@ code {
     @apply block text-center py-8 text-base-content opacity-50;
   }
 }
+/* ===== Per-post stronger body text ===== */
+.post-strong {
+  /* 体感更明显：直接 1.0，不要 0.95 */
+  color: oklch(var(--bc) / 1) !important;
+
+  /* 可读性加成（可选，不想变大就删这两行） */
+  font-size: 1.03em;
+  line-height: 1.85;
+}
+
+/* 防止 p/li 等被 prose 或其它规则再次降灰 */
+.post-strong :where(p, li, blockquote, td, th) {
+  color: oklch(var(--bc) / 1) !important;
+}
+
+/* 如果你在用 Tailwind Typography 的 prose，直接覆盖它的变量（命中率很高） */
+.post-strong.prose,
+.prose .post-strong {
+  --tw-prose-body: oklch(var(--bc) / 1);
+  --tw-prose-headings: oklch(var(--bc) / 1);
+  --tw-prose-bold: oklch(var(--bc) / 1);
+  --tw-prose-quotes: oklch(var(--bc) / 0.95);
+  --tw-prose-links: oklch(var(--p) / 1); /* 主题 primary */
+}
