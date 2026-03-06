@@ -1,9 +1,9 @@
 ---
 title: Machine Learning Specialization（Part 1 · Cycle 1）课程笔记
 comments: false
-description: Based on notes from Professor Andrew Ng's Machine Learning Specialization 2022 course, this is Cycle 1, Part 1.
+description: Based on notes from Professor Andrew Ng's Machine Learning Specialization 2022 course.
 pubDate: 2026-03-04
-updated: 2026-03-04
+updated: 2026-03-06
 categories:
   - Notebooks
 tags:
@@ -12,7 +12,8 @@ tags:
 
 <div class="post-strong">
 
-Part 1 的课程主题是 **Supervised Machine Learning: Regression and Classification**。
+Part 1 的课程主题是 **Supervised Machine Learning: Regression and Classification**。  
+本篇笔记覆盖了课程的前半部分内容，主要包括机器学习的基本介绍、单特征/多特征线性回归的训练流程及梯度下降算法的相关内容。
 
 ## 机器学习的分类
 
@@ -27,7 +28,9 @@ Part 1 的课程主题是 **Supervised Machine Learning: Regression and Classifi
     - **Anomaly Detection（异常检测）**
     - **Dimensionality Reduction（降维）**
 
-## 代价函数
+## 基本线性回归模型
+
+### 代价函数
 
 在线性回归中，预测函数写作
 
@@ -67,7 +70,7 @@ $$
   />
 </div>
 
-## 梯度下降
+### 梯度下降
 
 梯度下降（Gradient Descent）是一个通用优化方法，用于最小化目标函数。在当前场景中，它作用于 $J(w,b)$；在更一般的情形中，也可以作用于更高维参数下的目标函数。在线性回归中，梯度下降给出了一套明确的参数更新规则。
 
@@ -123,29 +126,137 @@ $$
 
 每一步更新都使用全部训练样本，因此这里对应的是 **Batch Gradient Descent**。这一点在本阶段主要是计算方式上的确认：参数更新基于整批数据，而不是部分样本。
 
-从实现角度看，这一部分最容易出错的地方并不在推导，而在更新顺序。理论表达要求 $w$ 与 $b$ 在同一轮中基于旧参数同时更新，因此实现时应先计算临时量，再统一赋值。下面给出一个简洁的 Python 风格片段，用于固定实现逻辑：
-
-```python
-for _ in range(num_iters):
-    dj_dw = 0.0
-    dj_db = 0.0
-
-    for i in range(m):
-        f_wb = w * x[i] + b
-        dj_dw += (f_wb - y[i]) * x[i]
-        dj_db += (f_wb - y[i])
-
-    dj_dw = dj_dw / m
-    dj_db = dj_db / m
-
-    # simultaneously update w and b
-    tmp_w = w - alpha * dj_dw
-    tmp_b = b - alpha * dj_db
-    w = tmp_w
-    b = tmp_b
-```
+这一部分最容易出错的地方并不在推导，而在更新顺序。理论表达要求 $w$ 与 $b$ 在同一轮中基于旧参数同时更新，因此实现时应先计算临时量，再统一赋值。
 
 参数空间中的下降过程、数据空间中的拟合直线变化以及代价函数值的下降，本质上是同一过程在不同表示下的对应。在线性回归的平方误差代价函数场景中，目标函数呈碗形（bowl shape）并具有凸性（convexity），因此优化过程的几何结构相对清晰，这也使它成为理解梯度下降的合适起点。
 
 <div style={{ display: "flex", justifyContent: "center" }}> <img src="/image/ml-c1w1-gradient-descent-learning-rate.png" alt="Gradient descent intuition and learning rate effects" style={{ width: "78%", height: "auto", borderRadius: "12px" }} loading="lazy" /> </div>
+
+## 多类特征线性回归
+
+### 向量化
+
+当输入不再是单一特征 $x$，而是一组特征 $x_1,\dots,x_n$ 时，训练样本写作 $(\vec{x}^{(i)}, y^{(i)})$，其中 $\vec{x}^{(i)}=[x_1^{(i)},x_2^{(i)},\dots,x_n^{(i)}]$。对应的线性回归模型为
+
+$$
+f_{\vec{w},b}(\vec{x}) = w_1x_1+w_2x_2+\cdots+w_nx_n+b
+$$
+
+也常写为点积形式
+
+$$
+f_{\vec{w},b}(\vec{x}) = \vec{w}\cdot \vec{x} + b
+$$
+
+这里 $\vec{w}=[w_1,\dots,w_n]$。该设定属于 **multiple linear regression**（多个输入特征），与“多个输出”的 multivariate regression 区分。
+
+在多特征场景中，向量化（vectorization）主要用于把“逐维求和/逐维更新”写成向量运算，从而使预测与参数更新都能以统一形式表达。对单个样本的预测可以写为 $\hat y^{(i)}=f_{\vec{w},b}(\vec{x}^{(i)})$，在代码中常对应 `dot(w, x) + b`。数学记号通常以 $j=1,\dots,n$ 标记特征维度；实现时数组多从 $0$ 开始计数，需要保持索引对齐。
+
+多特征下的平方误差代价函数保持同一结构，只是把模型替换为 $f_{\vec{w},b}$：
+
+$$
+J(\vec{w},b)=\frac{1}{2m}\sum_{i=1}^{m}\left(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\right)^2
+$$
+
+训练目标写作
+
+$$
+\min_{\vec{w},b} J(\vec{w},b)
+$$
+
+### 多元线性回归的梯度下降
+
+梯度下降从单变量的 $(w,b)$ 扩展为 $(w_1,\dots,w_n,b)$。更新骨架为
+
+$$
+\text{repeat until convergence }
+\left\{
+\begin{aligned}
+w_j &= w_j-\alpha \frac{\partial}{\partial w_j}J(\vec{w},b)\quad (j=1,\dots,n) \\\\
+b   &= b-\alpha \frac{\partial}{\partial b}J(\vec{w},b)
+\end{aligned}
+\right.
+$$
+
+其中 $\alpha$ 为学习率（learning rate）。对平方误差代价函数，偏导数为
+
+$$
+\frac{\partial}{\partial w_j}J(\vec{w},b)=\frac{1}{m}\sum_{i=1}^{m}\left(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\right)x_j^{(i)}
+$$
+
+$$
+\frac{\partial}{\partial b}J(\vec{w},b)=\frac{1}{m}\sum_{i=1}^{m}\left(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\right)
+$$
+
+代回后得到显式更新式：
+
+$$
+\text{repeat until convergence }
+\left\{
+\begin{aligned}
+w_j &= w_j-\alpha \cdot \frac{1}{m}\sum_{i=1}^{m}\left(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\right)x_j^{(i)} \\\\
+b   &= b-\alpha \cdot \frac{1}{m}\sum_{i=1}^{m}\left(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\right)
+\end{aligned}
+\right.
+$$
+
+每一步更新都遍历所有训练样本，因此对应 **Batch Gradient Descent**。实现时需要 **simultaneously update**：同一轮迭代中先基于旧的参数计算所有 $w_j$ 与 $b$ 的新值，再统一赋回；避免“先更新部分参数再用于其他参数”的顺序污染。
+
+参数更新也可以写成向量形式：若记梯度向量 $\vec{d}=[\frac{\partial}{\partial w_1}J,\dots,\frac{\partial}{\partial w_n}J]$，则
+
+$$
+\vec{w} := \vec{w}-\alpha \vec{d}
+$$
+
+这对应实现中用向量运算替代逐维循环更新。
+
+### 特征缩放（Feature Scaling）
+
+多特征回归中，特征尺度差异会直接影响梯度下降的迭代表现。常见目标是把各特征调整到相近范围（例如接近 $[-1,1]$ 或 $[-3,3]$ 一类尺度），以便梯度下降在各维度上的更新更均衡。常用缩放方式包括：
+
+Mean normalization：
+
+$$
+x_{j,\text{scaled}}=\frac{x_j-\mu_j}{x_{j,\max}-x_{j,\min}}
+$$
+
+Z-score normalization：
+
+$$
+x_{j,\text{scaled}}=\frac{x_j-\mu_j}{\sigma_j}
+$$
+
+其中 $\mu_j$ 为第 $j$ 个特征均值，$\sigma_j$ 为其标准差。多项式或其他非线性变换产生的新特征往往会进一步放大尺度差异，因此缩放在这些情况下更是训练的前置条件。
+
+### 检查收敛与学习率选择
+
+梯度下降的常用收敛检查方式是观察 $J(\vec{w},b)$ 随迭代次数的变化：在合理设置下应持续下降。也可以设定阈值 $\varepsilon$，当某次迭代带来的代价下降幅度不超过 $\varepsilon$ 时，作为进入收敛区间的判据。
+
+学习率 $\alpha$ 的选择与收敛曲线直接对应：若 $J(\vec{w},b)$ 震荡或上升，通常说明 $\alpha$ 过大（同时应核对更新方向为“减号”）；若下降但很慢，则 $\alpha$ 可能过小。实际尝试中常用按倍数递增的一组候选值：
+
+$$
+\dots,\,0.001,\,0.003,\,0.01,\,0.03,\,0.1,\,0.3,\,1,\,\dots
+$$
+
+在多特征场景下，特征缩放往往决定了“可用学习率区间”的宽窄：未缩放时即使取很小的 $\alpha$ 仍可能表现不理想，缩放后通常更容易得到稳定下降的曲线。
+
+### 特征工程与多项式回归
+
+在保持线性回归训练框架（代价函数 + 梯度下降）不变的前提下，扩展模型表达能力通常通过构造新特征完成。典型的特征工程包括构造交互项，例如
+
+$$
+x_3=x_1x_2
+$$
+
+将模型扩展为 $f_{\vec{w},b}(\vec{x})=w_1x_1+w_2x_2+w_3x_3+b$。
+
+多项式回归可以视为把单一变量 $x$ 映射为一组多项式特征（如 $x,x^2,x^3$），仍然是线性模型在更高维特征空间中的形式：
+
+$$
+f_{\vec{w},b}(x)=w_1x+w_2x^2+w_3x^3+b
+$$
+
+由于高阶项会显著改变数值范围，多项式特征通常需要配合特征缩放，以保证梯度下降在更新时数值稳定、收敛过程可控。
+
+到这里，多特征线性回归的训练流程可以被固定为一组一致的要素：以 $\vec{x}$ 表示输入、以 $f_{\vec{w},b}$ 定义预测、以 $J(\vec{w},b)$ 定义目标、以多维梯度下降更新参数，并通过特征缩放、收敛曲线与学习率选择把训练过程保持在可诊断与可复现的范围内；特征工程与多项式特征则提供了在同一训练框架下扩展输入表示的方式。
 </div>
