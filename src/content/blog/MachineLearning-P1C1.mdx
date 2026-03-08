@@ -1,5 +1,5 @@
 ---
-title: Machine Learning Specialization（Part 1 · Cycle 1）课程笔记
+title: 监督式机器学习 | Supervised Machine Learning Course Notes
 comments: false
 description: Based on notes from Professor Andrew Ng's Machine Learning Specialization 2022 course.
 pubDate: 2026-03-04
@@ -12,8 +12,7 @@ tags:
 
 <div class="post-strong">
 
-Part 1 的课程主题是 **Supervised Machine Learning: Regression and Classification**。  
-本篇笔记覆盖了课程的前半部分内容，主要包括机器学习的基本介绍、单特征/多特征线性回归的训练流程及梯度下降算法的相关内容。
+本文是我学习吴恩达（Andrew Ng）《Machine Learning Specialization》（2022）后整理的笔记，覆盖 Part 1：**Supervised Machine Learning: Regression and Classification**。
 
 ## 机器学习的分类
 
@@ -210,7 +209,7 @@ $$
 
 这对应实现中用向量运算替代逐维循环更新。
 
-### 特征缩放（Feature Scaling）
+### 特征缩放
 
 多特征回归中，特征尺度差异会直接影响梯度下降的迭代表现。常见目标是把各特征调整到相近范围（例如接近 $[-1,1]$ 或 $[-3,3]$ 一类尺度），以便梯度下降在各维度上的更新更均衡。常用缩放方式包括：
 
@@ -259,4 +258,141 @@ $$
 由于高阶项会显著改变数值范围，多项式特征通常需要配合特征缩放，以保证梯度下降在更新时数值稳定、收敛过程可控。
 
 到这里，多特征线性回归的训练流程可以被固定为一组一致的要素：以 $\vec{x}$ 表示输入、以 $f_{\vec{w},b}$ 定义预测、以 $J(\vec{w},b)$ 定义目标、以多维梯度下降更新参数，并通过特征缩放、收敛曲线与学习率选择把训练过程保持在可诊断与可复现的范围内；特征工程与多项式特征则提供了在同一训练框架下扩展输入表示的方式。
+
+## Logistic 回归
+
+前面线性回归的目标是预测连续值；当任务切换到二分类时，标签 $y\in\{0,1\}$，模型输出需要落在 $[0,1]$ 区间，并能与“预测为 1 的概率”对齐。逻辑回归沿用前文的参数与特征记号（$\vec{x},\vec{w},b$），保留线性组合结构，只在输出层引入 sigmoid（logistic）函数完成映射。
+
+先定义线性部分
+
+$$
+z=\vec{w}\cdot\vec{x}+b
+$$
+
+sigmoid 函数为
+
+$$
+g(z)=\frac{1}{1+e^{-z}}
+$$
+
+逻辑回归模型写作
+
+$$
+f_{\vec{w},b}(\vec{x})=g(\vec{w}\cdot\vec{x}+b)
+=\frac{1}{1+e^{-(\vec{w}\cdot\vec{x}+b)}}
+$$
+
+并记作
+
+$$
+f_{\vec{w},b}(\vec{x}) = P(y=1\mid \vec{x};\vec{w},b),\qquad
+P(y=0\mid \vec{x};\vec{w},b)=1-f_{\vec{w},b}(\vec{x})
+$$
+
+在预测规则上，常用阈值 $0.5$ 将概率映射为类别：若 $f_{\vec{w},b}(\vec{x})\ge 0.5$ 则 $\hat y=1$，否则 $\hat y=0$。由于 $g(z)$ 单调递增，
+
+$$
+f_{\vec{w},b}(\vec{x})\ge 0.5
+\Longleftrightarrow z\ge 0
+\Longleftrightarrow \vec{w}\cdot\vec{x}+b\ge 0
+$$
+
+因此决策边界（decision boundary）由
+
+$$
+\vec{w}\cdot\vec{x}+b=0
+$$
+
+给出。需要强调的是：决策边界由 $z=0$ 决定，而不是由 sigmoid 的“形状”决定；当输入特征已经包含平方项、交互项等变换特征时，边界在原始输入空间中可以表现为非线性，但写法仍然是 $z=0$。
+
+{/*
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-c1w2-decision-boundary.png"
+    alt="Decision boundary in logistic regression"
+    style={{ width: "78%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+*/}
+
+## 逻辑回归的代价函数
+
+逻辑回归的训练依旧写成最小化代价函数 $J$，但此处不再沿用平方误差，而采用对数损失来刻画分类误差。对单个样本 $(\vec{x}^{(i)},y^{(i)})$，定义
+
+$$
+L\big(f_{\vec{w},b}(\vec{x}^{(i)}),y^{(i)}\big)=
+\begin{cases}
+-\log\big(f_{\vec{w},b}(\vec{x}^{(i)})\big), & y^{(i)}=1\\[4pt]
+-\log\big(1-f_{\vec{w},b}(\vec{x}^{(i)})\big), & y^{(i)}=0
+\end{cases}
+$$
+
+常用的合并写法为
+
+$$
+L\big(f_{\vec{w},b}(\vec{x}^{(i)}),y^{(i)}\big)
+= -\,y^{(i)}\log\big(f_{\vec{w},b}(\vec{x}^{(i)})\big)
+-\big(1-y^{(i)}\big)\log\big(1-f_{\vec{w},b}(\vec{x}^{(i)})\big)
+$$
+
+总体代价函数取平均：
+
+$$
+J(\vec{w},b)=\frac{1}{m}\sum_{i=1}^{m}L\big(f_{\vec{w},b}(\vec{x}^{(i)}),y^{(i)}\big)
+$$
+
+至此可以看到，分类并没有改变“训练范式”：仍然是通过选择 $f$ 与 $J$ 来定义学习问题，再通过最小化 $J$ 求解参数。实现上梯度下降的结构与线性回归一致，尤其仍然要求 simultaneously update（同一轮中基于旧参数先算出新参数再统一赋回），这一点在编码时依旧是最容易踩坑的细节之一。
+
+## 正则化
+
+当特征数量增多，或引入更复杂的特征（例如高次项、交互项）时，模型容易出现过拟合（overfitting / high variance）：训练集拟合很好，但泛化变差。常见的处理路径包括增加训练样本、特征选择与正则化。这里正则化的写法非常“干净”：不改变模型形式，而是在代价函数里加入对参数规模的惩罚项，从而让学习过程倾向于较小的参数。
+
+常用 $L2$ 正则项为（通常不惩罚 $b$）：
+
+$$
+\frac{\lambda}{2m}\sum_{j=1}^{n}w_j^2
+$$
+
+其中 $\lambda$ 为正则化参数（regularization parameter）。
+
+### 正则化代价函数
+
+线性回归的正则化代价函数写作
+
+$$
+J(\vec{w},b)=\frac{1}{2m}\sum_{i=1}^{m}\big(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\big)^2
++\frac{\lambda}{2m}\sum_{j=1}^{n}w_j^2
+$$
+
+逻辑回归的正则化代价函数为
+
+$$
+J(\vec{w},b)=
+-\frac{1}{m}\sum_{i=1}^{m}\left[
+y^{(i)}\log\big(f_{\vec{w},b}(\vec{x}^{(i)})\big)
++\big(1-y^{(i)}\big)\log\big(1-f_{\vec{w},b}(\vec{x}^{(i)})\big)
+\right]
++\frac{\lambda}{2m}\sum_{j=1}^{n}w_j^2
+$$
+
+### 梯度下降更新
+
+在梯度下降中，以线性回归为例，正则化项直接进入 $w_j$ 的更新。对每个 $j=1,\dots,n$：
+
+$$
+w_j := w_j-\alpha\left[\frac{1}{m}\sum_{i=1}^{m}\big(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\big)x_j^{(i)}+\frac{\lambda}{m}w_j\right]
+$$
+
+而 $b$ 的更新保持为
+
+$$
+b := b-\alpha\cdot \frac{1}{m}\sum_{i=1}^{m}\big(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)}\big)
+$$
+
+逻辑回归的正则化训练可用同一思路理解：目标函数从未正则化的 $J(\vec{w},b)$ 改为包含 $\lambda$ 项的 $J(\vec{w},b)$，并由此在参数更新中体现对 $w_j$ 的额外收缩项。
+
+## 总结
+
+这一部分内容最终可以整理为同一套写法在不同任务上的复用：回归与分类的差异集中体现在 $f$ 的输出形式与 $J$ 的定义；多特征、特征变换使输入表达更丰富，但训练仍落在“最小化 $J$”的框架内；当模型复杂度影响泛化时，正则化将复杂度控制写入 $J$，从而把“拟合能力”与“泛化表现”放在同一个目标函数里统一处理。
 </div>
