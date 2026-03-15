@@ -1,0 +1,180 @@
+---
+title: 神经网络基础 | Advanced Learning Algorithms
+comments: false
+description: Based on Professor Andrew Ng's Machine Learning Specialization (2022). 
+pubDate: 2026-03-16
+updated: 2026-03-16
+categories:
+  - Notebooks
+tags:
+  - Machine Learning
+  - Neural Networks
+---
+
+<div class="post-strong">
+
+本文是我学习吴恩达（Andrew Ng）《Machine Learning Specialization》（2022）后整理的笔记，覆盖 Part 2：**Advanced Learning Algorithms**。
+
+## 神经元、概率输出与应用场景
+
+神经网络的基本计算单元可以写成“线性组合 + 非线性函数”。在二分类语境里，输出通常被解释为概率形式的标量，因此常用 sigmoid（logistic）函数：
+
+$$
+g(z)=\frac{1}{1+e^{-z}}
+$$
+
+对单个输入 $x$，一个神经元可以写成
+
+$$
+a=\frac{1}{1+e^{-(wx+b)}}
+$$
+
+当输入扩展为多特征向量 $\vec{x}$ 时，记号自然过渡为
+
+$$
+z=\vec{w}\cdot\vec{x}+b,\qquad a=g(z)
+$$
+
+如果把输出解释为类别为 1 的概率，则可以写作
+
+$$
+a=f_{\vec{w},b}(\vec{x})=P(y=1\mid \vec{x};\vec{w},b),\qquad P(y=0\mid \vec{x};\vec{w},b)=1-a
+$$
+
+在阈值 $0.5$ 下，预测标签写作
+
+$$
+\hat y=
+\begin{cases}
+1,& a\ge 0.5\\
+0,& a<0.5
+\end{cases}
+$$
+
+这一写法与前一篇中的 logistic 回归是连续的，只是这里不再把它看作“分类模型的终点”，而是把它作为构造更大网络时的基本单元。
+
+应用层面的例子主要有两类。一类是需求预测：输入可以是价格、营销、运输成本、材料等特征，输出是“是否成为 top seller”的概率；另一类是图像识别：一张灰度图在输入时常被展平为高维向量 $\vec{x}$，例如 $1000\times 1000$ 的图像可对应到约 $10^6$ 维输入。两类任务在对象上差别很大，但在计算形式上并没有本质区别，都是从输入向量出发，通过若干次“线性组合 + 激活函数”得到输出。
+
+## 神经网络
+
+为了让后续表达统一起来，输入写作
+
+$$
+\vec{x}=\vec{a}^{[0]}
+$$
+
+其中上标 \([l]\) 表示第 $l$ 层。第 $l$ 层第 $j$ 个神经元的输出记为 $a^{[l]}_j$，其计算形式为
+
+$$
+a^{[l]}_j = g\!\left(\vec{w}^{[l]}_j \cdot \vec{a}^{[l-1]} + b^{[l]}_j\right)
+$$
+
+也常把线性部分单独记成
+
+$$
+z^{[l]}_j=\vec{w}^{[l]}_j\cdot \vec{a}^{[l-1]}+b^{[l]}_j,\qquad
+a^{[l]}_j=g\!\left(z^{[l]}_j\right)
+$$
+
+同一层中的多个神经元输出组合起来，就得到该层的激活向量 $\vec{a}^{[l]}$。因此，网络并不是一组彼此独立的神经元，而是
+
+$$
+\vec{a}^{[0]}\rightarrow \vec{a}^{[1]}\rightarrow \vec{a}^{[2]}\rightarrow \cdots \rightarrow \vec{a}^{[L]}
+$$
+
+这样的层级结构。输入层只是记号上的起点；隐藏层负责逐层变换表示；输出层给出最终结果。在二分类中，输出层通常是一个标量 $a^{[L]}$；若是多分类或更复杂任务，输出层的维度则会相应改变。
+
+这里最需要固定的一点是：**一个神经元的输入不是某个标量，而是上一层的整个激活向量**。因此，权重写作向量 $\vec{w}^{[l]}_j$，而不是单个数。这一点在手写公式时不难看出，但到实现里最容易因为 shape 不清楚而混乱。
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-ala-nn-layers.png"
+    alt="Neural network layers and activations"
+    style={{ width: "62%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+
+## 前向传播
+
+神经网络的推理过程就是前向传播。其含义并不复杂：从输入层开始，按层顺序计算每一层的线性项与激活，直到输出层。写成公式，就是不断重复
+
+$$
+z^{[l]}_j=\vec{w}^{[l]}_j\cdot \vec{a}^{[l-1]}+b^{[l]}_j,\qquad
+a^{[l]}_j=g\!\left(z^{[l]}_j\right)
+$$
+
+在单隐藏层网络里，可以把这个过程写得更具体一些。若输入是 $\vec{x}$，第一层得到 $\vec{a}^{[1]}$，第二层得到 $\vec{a}^{[2]}$，最后输出层得到 $a^{[3]}$。每一层都只依赖前一层的输出，不需要同时回看更早的层，因此“前向传播”这个名字本身就非常贴切：信息沿着网络结构从前往后流动。
+
+把这件事放到代码里看，会更容易和实现对应起来。逐层计算的骨架可以写成：
+
+```python
+a1 = layer_1(x)
+a2 = layer_2(a1)
+a3 = layer_3(a2)
+```
+
+如果输出层用于二分类，则再对 a3 做阈值判断即可。这里不需要铺开完整训练代码，因为这一部分真正重要的并不是框架语法，而是“上一层输出就是下一层输入”这一结构在代码里的对应关系。
+
+## 向量、张量与 shape
+
+神经网络一旦进入实现层面，最容易出问题的部分往往不是公式本身，而是数据形状。数学上写成向量的 $\vec{x}$，在 NumPy 或 TensorFlow 中未必总以同一种形式出现。以两个特征为例：
+
+- `np.array([200, 17])` 是一维数组；
+
+- `np.array([[200, 17]])` 的形状是 $(1,2)$；
+
+- `np.array([[200],[17]])` 的形状是 $(2,1)$。
+
+三者数值上看起来相似，但在矩阵运算和框架 API 中并不等价。对于神经网络，单样本常见写法是 $(1,n)$，一批样本常见写法是 $(m,n)$。这一约定很自然：**行表示样本，列表示特征或某一层的单元数。** 沿着这一约定往下走，每一层的输入输出形状就会变得清晰得多。
+
+在 TensorFlow/Keras 中，数据通常以 `tf.Tensor` 表示，并带有 `shape` 与 `dtype`。调试时最实用的操作不是把每个元素都手算一遍，而是先确认 `tensor.shape` 是否与预期一致；必要时再用 `.numpy()` 把张量转成 NumPy 数组查看具体数值。
+
+## 矩阵化写法
+
+如果只考虑一个神经元，那么计算是
+
+$$
+z=\vec{w}\cdot\vec{x}+b,\qquad a=g(z)
+$$
+
+如果同一层有多个神经元，当然可以逐个计算 $a_1,a_2,\dots,a_u$，再把它们拼成一个输出向量。但在实现上，更常见的写法是把整层一次算完。设输入激活矩阵为 $A_{\text{in}}$，权重矩阵为 $W$，偏置为 $B$，则一层的输出可写成
+
+$$
+Z = A_{\text{in}}W + B,\qquad A_{\text{out}}=g(Z)
+$$
+
+其中若 $A_{\text{in}}\in\mathbb{R}^{m\times n}$，$W\in\mathbb{R}^{n\times u}$，则
+
+$$
+Z\in\mathbb{R}^{m\times u},\qquad A_{\text{out}}\in\mathbb{R}^{m\times u}
+$$
+
+这正好对应 $m$ 个样本经过这一层后，得到 $u$ 个单元的输出。偏置 $B$ 通常写成 $(1,u)$，并按行广播到全部样本。
+
+这里并不需要把矩阵乘法本身再解释一遍；对这一部分而言，只要记住内维度匹配、以及输出的行列意义即可。写成代码时常见形式是：
+
+```
+Z = A @ W + B
+A_out = g(Z)
+```
+
+在更高层的框架中，例如 Keras，这一层结构会被封装成 `Dense`。一个简单的网络结构可以写成：
+
+```
+model = tf.keras.Sequential([`  
+tf.keras.layers.Dense(25, activation="sigmoid"),`  
+tf.keras.layers.Dense(15, activation="sigmoid"),`  
+tf.keras.layers.Dense(1, activation="sigmoid"),`  
+])
+```
+
+这段代码本身并不复杂，但它把前面所有记号都落到了可执行对象上：每一个 `Dense` 都对应一层，每一层内部都隐含着 $Z=A_{\text{in}}W+B$ 与 $A_{\text{out}}=g(Z)$ 的计算。
+
+## ANI、AGI 以及表征的可学习性
+
+这一部分还引出了两个概念：**ANI（Artificial Narrow Intelligence）** 与 **AGI（Artificial General Intelligence）**。ANI 指面向特定任务的智能系统，例如图像分类、语音识别、推荐系统等；AGI 则指更广义的通用智能，即能够在广泛任务中表现出类似人类的学习与适应能力。当前机器学习和深度学习的大多数成功案例仍然属于 ANI。
+
+围绕这一点，还引出了 “one learning algorithm hypothesis” 的观点：不同感官皮层在功能上虽然不同，但可能共享相近的学习机制。配合感官替代与神经可塑性的例子，这一部分传达的核心并不是对 AGI 作结论，而是强调：很多能力本质上依赖于可学习的表征（representation），而不是预先写死的固定规则。放在神经网络语境中，这一观察与“通过多层激活逐步形成中间表征”的思路是连在一起的。
+
+</div> 
