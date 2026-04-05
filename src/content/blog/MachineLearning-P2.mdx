@@ -3,7 +3,7 @@ title: 神经网络基础 | Advanced Learning Algorithms
 comments: false
 description: Based on Professor Andrew Ng's Machine Learning Specialization (2022).
 pubDate: 2026-03-16
-updated: 2026-03-22
+updated: 2026-04-06
 categories:
   - Notebooks
 tags:
@@ -305,5 +305,114 @@ $$
 在多类分类任务中，网络结构通常可以写成“隐藏层 + 多类输出层”的形式。隐藏层继续使用前面已经固定下来的激活函数选择，输出层则根据类别数设置单元数量。若采用 softmax 的显式写法，最后一层可写成 `Dense(units=N, activation="softmax")`；若采用 logits 写法，则写成 `Dense(units=N, activation="linear")`，并在 loss 中指定 `from_logits=True`。
 
 因此，从二分类推进到多类分类时，真正需要改动的部分只有三项：输出层单元数、输出层激活形式，以及与之匹配的损失函数。前面的层级记号、前向传播结构和张量 shape 的理解方式都保持不变。
+
+## 模型评估与诊断
+
+模型一旦进入训练阶段，最先需要固定的不是怎么继续调结构，而是怎么评估现在到底出了什么问题。这里最基本的分工是：**训练集用于拟合参数，交叉验证集用于做模型选择和超参数选择，测试集只用于最后估计泛化误差**。如果在选择模型时反复查看测试集表现，那么测试误差本身也会变得过于乐观。
+
+沿着这条分工，误差记号自然分成三项：$J_{train}$、$J_{cv}$ 与 $J_{test}$。前两者主要用于诊断，最后一项才用于汇报最终表现。
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-ala-train-cv-test-flow.svg"
+    alt="Train, cross-validation, and test split"
+    style={{ width: "72%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+
+偏差与方差的判断可以先从最常见的几种情形入手：
+
+- **高偏差（underfit）**：$J_{train}$ 较高，且 $J_{cv}\approx J_{train}$  
+- **高方差（overfit）**：$J_{train}$ 较低，但 $J_{cv}\gg J_{train}$  
+- **偏差和方差同时存在**：$J_{train}$ 偏高，同时 $J_{cv}$ 明显更高
+
+只看训练误差和交叉验证误差还不够，很多时候还需要再引入一个表现基准。这个基准可以是 human-level performance、已有算法表现，或者结合经验给出的合理误差水平。只有把当前模型放到这个基准旁边，才能更清楚地区分：究竟是训练集上还没学好，还是训练集已经学好了但泛化不够。
+
+正则化参数 $\lambda$ 也需要放在这个诊断框架里理解。$\lambda$ 过大时，模型更容易走向高偏差；$\lambda$ 过小时，模型更容易走向高方差。因此，$\lambda$ 不是凭直觉直接定下来的，而是要在训练集上拟合、在交叉验证集上比较，再选出对应 $J_{cv}$ 更合适的取值。对神经网络也是类似的思路：网络规模、正则化强度和数据量通常要一起看，而不是单独看某一个因素。
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-ala-bias-variance-diagnosis.svg"
+    alt="Bias variance diagnosis"
+    style={{ width: "74%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+
+学习曲线把这种诊断再往前推进了一步。若随着训练集规模增加，$J_{train}$ 与 $J_{cv}$ 都停在一个较高位置附近，那么问题更接近高偏差；若 $J_{train}$ 已经较低，而 $J_{cv}$ 仍明显偏高，则更接近高方差。这样一来，接下去该做的事情就不再需要靠猜：高偏差往往更需要模型表达能力、特征或更小的正则化；高方差则更可能从更多数据、适度更强的正则化或更合适的特征集合中获益。
+
+放到神经网络里，这一组判断还会带来一个额外变化：较大的网络常常是低偏差机器。如果训练集上表现还不够好，那么先考虑更大的网络通常是自然的方向；如果训练集表现已经不错，但交叉验证集表现明显落后，则问题更多会落在泛化这一侧。
+
+## 误差分析、数据与迁移学习
+
+当对高偏差还是高方差已经有了初步判断之后，下一步通常不是立刻大范围改模型，而是先看错误究竟集中在哪里。误差分析的做法很直接：从交叉验证集里抽取一批错误样本，按共同特征分类统计，看哪些类型最值得优先处理。这样的分析不只是为了描述错误，而是为了排序改进方向。
+
+以文本分类这类任务为例，错误可能集中在特殊词形、刻意拼写变形、特定路由特征、图片内嵌内容等不同来源。如果某一类错误占比明显更高，那么下一步更可能是围绕这类错误补特征、补数据或改标注，而不是同时做很多彼此无关的尝试。这样一来，调试模型就不再是盲目试错，而开始带有明显的“定向改进”性质。
+
+在数据层面，最常见的改进包括三类。第一类是真实收集更多数据；第二类是 data augmentation，也就是在现有样本基础上构造新的训练样本；第三类是 synthetic data 与 transfer learning。它们看起来都在“扩大数据”，但侧重点并不一样。
+
+data augmentation 的关键在于引入的变化应当代表测试环境中真的会出现的扰动。图像中的形变、位移、轻微遮挡，语音中的背景噪声、通话质量变化，都属于比较典型的情形；纯随机、没有实际分布含义的噪声则未必有效。换句话说，augmentation 更像是在模拟系统未来真正要面对的输入变化。
+
+transfer learning 则更进一步：如果当前任务的数据较少，但输入类型与另一个大规模任务一致，就可以先利用在大数据集上学到的参数，再在自己的数据上继续 fine-tune。图像任务常见的原因是，底层网络往往已经学到了边缘、角点、曲线等相对通用的表示，因此前几层的参数并不需要每次都从头学习。实际使用时，一种做法是只训练新的输出层；另一种做法是继续训练全部参数，具体取决于数据规模与任务差异。
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-ala-iterative-loop.svg"
+    alt="Iterative loop of machine learning development"
+    style={{ width: "68%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+
+这样看下来，模型开发更像一个循环过程：先定结构，再训练，再做诊断与误差分析，再根据结果去改数据、改特征、改正则化或改结构。
+
+## 从训练到部署：项目闭环与风险约束
+
+模型训练完成并不意味着项目结束。一个完整的机器学习系统通常还要经历：确定问题范围、定义与收集数据、训练模型、部署到生产环境，再通过监控和维护继续迭代。部署之后，很多原本在 notebook 里不显眼的问题都会变得具体起来，例如推理服务如何调用、日志如何记录、模型如何更新、线上表现如何监控，这些通常都属于更大的工程问题。
+
+这里还会自然碰到另一组约束：并不是“能训练出来的系统”都适合直接上线。生成虚假内容、欺诈对抗、有害内容扩散、对脆弱群体的潜在伤害，都属于模型部署前后必须认真考虑的问题。比较实用的做法通常包括：在项目早期就讨论可能出错的使用场景；部署前进行系统审计；查阅所在行业已有标准；如果存在潜在伤害，再提前准备缓解方案，并在部署后持续监控。
+
+这部分内容没有引入新的模型公式，但它把前面的“模型训练”放进了一个更完整的工程闭环里：模型性能只是系统的一部分，数据、部署环境、监控与风险控制同样属于整体设计。
+
+## 倾斜数据集、Precision 与 Recall
+
+分类任务里，accuracy 并不总是可靠指标。一个最典型的情形是类别极不平衡：如果正类非常少，那么一个几乎总是预测负类的模型，也可能得到很高的准确率，但它并没有真正解决问题。
+
+这时更有区分力的指标通常是 precision 和 recall。若把正类记为 $y=1$，并把混淆矩阵中的 true positive、false positive、false negative 记作 $TP, FP, FN$，则
+
+$$
+\mathrm{Precision}=\frac{TP}{TP+FP},\qquad
+\mathrm{Recall}=\frac{TP}{TP+FN}
+$$
+
+precision 关注的是“预测为正的样本里，有多少真的为正”；recall 关注的是“真实为正的样本里，有多少被成功找出来”。这两个量通常不会同时无限提高，因此阈值选择会直接影响它们的平衡。
+
+如果把二分类输出写成一个概率分数，那么一般形式可以记为：当
+
+$$
+f_{\vec{w},b}(\vec{x}) \ge \text{threshold}
+$$
+
+时预测为正类。阈值提得更高，模型往往会更谨慎，precision 更容易上升，而 recall 往往下降；阈值放得更低，则更容易把正类都找出来，但误报也会更多。也正因为如此，precision 与 recall 更适合和具体任务目标一起看，而不是孤立比较。
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/image/ml-ala-precision-recall.svg"
+    alt="Precision recall tradeoff"
+    style={{ width: "72%", height: "auto", borderRadius: "12px" }}
+    loading="lazy"
+  />
+</div>
+
+当需要把 precision 与 recall 合并成一个紧凑指标时，常用的是 F1 score：
+
+$$
+F_1=\frac{2PR}{P+R}
+$$
+
+其中 $P$ 表示 precision，$R$ 表示 recall。它相当于 precision 与 recall 的调和平均，因此当二者差距很大时，得分不会被单侧较高的数值轻易抬高。这使得 F1 比简单平均更适合比较那些“precision 很高但 recall 很低”或“recall 很高但 precision 很低”的模型。
+
+到这里，模型评估已经不再只是一个单独的误差值，而是和数据分布、任务目标、阈值选择以及系统部署背景一起构成了一套更完整的判断框架。
 
 </div>

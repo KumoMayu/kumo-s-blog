@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700">
+<style>
+.t{font:700 48px Arial,'Noto Sans SC','Microsoft YaHei',sans-serif;fill:#1e293b}
+.m{font:600 26px Arial,'Noto Sans SC','Microsoft YaHei',sans-serif;fill:#334155}
+.s{font:500 22px Arial,'Noto Sans SC','Microsoft YaHei',sans-serif;fill:#64748b}
+.ax{stroke:#94a3b8;stroke-width:4}
+.c{stroke:#3b82f6;stroke-width:7;fill:none}
+.p{fill:#3b82f6}
+.d{stroke:#cbd5e1;stroke-width:3;stroke-dasharray:10 10}
+</style>
+<rect width="1400" height="700" fill="#ffffff"/>
+<text x="700" y="68" text-anchor="middle" class="t">Precision / Recall</text>
+
+<line x1="190" y1="540" x2="1180" y2="540" class="ax"/>
+<line x1="190" y1="540" x2="190" y2="150" class="ax"/>
+<text x="690" y="620" text-anchor="middle" class="m">recall</text>
+<text x="96" y="345" transform="rotate(-90 96 345)" text-anchor="middle" class="m">precision</text>
+
+<path d="M250 200 C420 150,570 185,700 280 C820 365,940 430,1120 500" class="c"/>
+
+<circle cx="360" cy="178" r="8" class="p"/>
+<circle cx="720" cy="292" r="8" class="p"/>
+<circle cx="1030" cy="455" r="8" class="p"/>
+
+<line x1="360" y1="178" x2="360" y2="540" class="d"/>
+<line x1="720" y1="292" x2="720" y2="540" class="d"/>
+<line x1="1030" y1="455" x2="1030" y2="540" class="d"/>
+
+<text x="312" y="145" class="s">high threshold</text>
+<text x="650" y="255" class="s">middle</text>
+<text x="970" y="500" class="s">low threshold</text>
+</svg>
